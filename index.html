@@ -345,7 +345,7 @@ const S={items:[],loaded:false,mode:"none",cat:"all",status:"all",sort:"new",q:"
 let editing=null, photoData="", delArmed=false, toastT=0;
 
 function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),2800); }
-function shown(){ return S.loaded && !S.items.length ? EXAMPLES : S.items; }
+function shown(){ return S.items; }
 function initials(it){ return esc(tokens(it.name).slice(0,2).map(t=>t[0].toUpperCase()).join("")||"?"); }
 function tile(it){ return `<div class="ph ${esc(it.cat)}">${it.photo?`<img src="${esc(it.photo)}" alt="">`:`<span class="ini">${initials(it)}</span>`}${it.example?'<span class="ex">Example</span>':""}</div>`; }
 
@@ -371,7 +371,7 @@ function collectionHTML(all){
   const gain=t.gain, gcls=gain>0?"up":gain<0?"down":"";
   const tabs=[["all","All",all.length],...Object.entries(CATS).map(([k,c])=>[k,c.label,all.filter(i=>i.cat===k).length])];
   return `
-  ${!S.items.length?'<div class="note">These are examples so you can see how Cubby looks. They disappear when you add your first item.</div>':""}
+  ${!S.items.length?'<div class="note">Your collection is empty. Click Add item to scan or enter your first one.</div>':""}
   <section class="stats" aria-label="Summary">
     <div class="stat big"><div class="k">Collection value</div><div class="v">${money(t.value)||"$0"}</div><div class="s">${t.count} item${t.count===1?"":"s"} you own</div></div>
     <div class="stat"><div class="k">You paid</div><div class="v">${money(t.paid)||"$0"}</div><div class="s ${gcls}">${gain>0?"Up ":gain<0?"Down ":"Even"}${gain?money(Math.abs(gain)):""}</div></div>
@@ -389,7 +389,7 @@ function collectionHTML(all){
 function locs(all){ return [...new Set(all.map(i=>i.location).filter(Boolean))].sort((a,b)=>a.localeCompare(b)); }
 function locSel(all){ const l=locs(all); return l.length?`<select class="field" id="loc-sel" aria-label="Where it is kept"><option value="all">Kept anywhere</option>${l.map(x=>`<option value="${esc(x)}"${S.loc===x?" selected":""}>${esc(x)}</option>`).join("")}</select>`:""; }
 function gridHTML(list){
-  return list.length? list.map(cardHTML).join("") : `<div class="empty">Nothing matches. ${S.q.trim()?"You don't own this yet, as far as Cubby can tell.":"Try another filter."}</div>`;
+  return list.length? list.map(cardHTML).join("") : !S.items.length? "" : `<div class="empty">Nothing matches. ${S.q.trim()?"You don't own this yet, as far as Cubby can tell.":"Try another filter."}</div>`;
 }
 function cardHTML(it){
   const sub=[it.maker,it.detail||it.type].filter(Boolean).join(" · ");
@@ -398,7 +398,7 @@ function cardHTML(it){
 function showcaseHTML(all){
   const mine=all.filter(i=>i.status==="owned"||i.status==="forsale").sort((a,b)=>(b.photo?1:0)-(a.photo?1:0));
   const parts=Object.entries(CATS).map(([k,c])=>[c.label.toLowerCase(),mine.filter(i=>i.cat===k).length]).filter(p=>p[1]).map(p=>p[1]+" "+p[0]).join(", ");
-  return `<div class="showhead"><div style="margin-right:auto"><h1>${mine.length} piece${mine.length===1?"":"s"} worth showing off</h1><p>${esc(parts)||"Add items to fill your showcase."}${!S.items.length?" (examples)":""}</p></div><button class="btn" type="button" id="copy-list">Copy as a list</button></div>
+  return `<div class="showhead"><div style="margin-right:auto"><h1>${mine.length} piece${mine.length===1?"":"s"} worth showing off</h1><p>${esc(parts)||"Add items to fill your showcase."}</p></div><button class="btn" type="button" id="copy-list">Copy as a list</button></div>
   <div class="grid show">${mine.length?mine.map(it=>`<button class="card" type="button" data-id="${esc(it.id)}">${tile(it)}<div class="meta"><div class="nm">${esc(it.name)}</div><div class="sub">${esc([it.maker,it.detail].filter(Boolean).join(" · "))}</div></div></button>`).join(""):'<div class="empty">Nothing here yet.</div>'}</div>`;
 }
 
