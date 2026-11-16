@@ -145,6 +145,12 @@ dialog::backdrop{background:rgba(10,14,25,.55)}
 .foot span{margin-right:auto}
 .actrow{display:flex;flex-wrap:wrap;gap:10px}
 .sub.loc{font-weight:700;color:var(--ink);font-size:12px}
+#acct form{display:flex;flex-direction:column;gap:14px}
+#acct form[hidden]{display:none}
+.chk span{display:flex;gap:8px;align-items:center;color:var(--ink);font-size:15px}
+.card.still{cursor:default}
+.card.still:hover{transform:none;box-shadow:4px 4px 0 var(--shadow)}
+#a-link{overflow-wrap:anywhere}
 .bc{display:flex;gap:8px}.bc .field{flex:1}
 #scanner{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
 #scanner[hidden]{display:none}
@@ -159,6 +165,7 @@ dialog::backdrop{background:rgba(10,14,25,.55)}
       <a href="#collection" id="nav-collection">Collection</a>
       <a href="#showcase" id="nav-showcase">Showcase</a>
     </nav>
+    <button class="btn" id="acct-btn" type="button">Sign in</button>
     <button class="btn primary" id="add-btn" type="button">Add item</button>
   </header>
   <div class="stripes" aria-hidden="true"></div>
@@ -221,9 +228,34 @@ dialog::backdrop{background:rgba(10,14,25,.55)}
     </div>
   </form>
 </dialog>
+<dialog id="acct" aria-labelledby="acct-title">
+  <div class="dhead"><h2 id="acct-title">Your account</h2><button class="btn" type="button" id="acct-close">Close</button></div>
+  <div class="dbody">
+    <form id="auth-form" novalidate>
+      <p class="hint">Sign in to sync your collection across devices and share a public showcase.</p>
+      <div class="fg">
+        <label class="full">Email<input class="field" id="a-email" type="email" autocomplete="email"></label>
+        <label class="full">Password<input class="field" id="a-pass" type="password" autocomplete="current-password"></label>
+      </div>
+      <div class="dfoot"><button class="btn" type="button" id="signup-btn">Create account</button><button class="btn primary" type="submit">Sign in</button></div>
+    </form>
+    <form id="prof-form" novalidate hidden>
+      <p class="hint" id="a-who"></p>
+      <div class="fg">
+        <label class="full">Showcase name<input class="field" id="a-user" autocomplete="off" placeholder="3 to 20 letters, numbers, - or _"></label>
+        <label class="full chk"><span><input type="checkbox" id="a-public"> Make my showcase public</span></label>
+      </div>
+      <p class="hint">A public showcase shows item names, makers, details and photos. Prices, notes and where things are kept stay private.</p>
+      <p class="hint" id="a-link"></p>
+      <div class="dfoot"><button class="btn danger sp" type="button" id="signout-btn">Sign out</button><button class="btn" type="button" id="copylink-btn" hidden>Copy link</button><button class="btn primary" type="submit">Save</button></div>
+    </form>
+    <p class="hint" id="a-msg" role="status"></p>
+  </div>
+</dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 <script>
 /* ---- pure logic (tested separately) ---- */
 const CATS = {
@@ -313,9 +345,9 @@ function shown(){ return S.loaded && !S.items.length ? EXAMPLES : S.items; }
 function initials(it){ return esc(tokens(it.name).slice(0,2).map(t=>t[0].toUpperCase()).join("")||"?"); }
 function tile(it){ return `<div class="ph ${esc(it.cat)}">${it.photo?`<img src="${esc(it.photo)}" alt="">`:`<span class="ini">${initials(it)}</span>`}${it.example?'<span class="ex">Example</span>':""}</div>`; }
 
-function view(){ return location.hash==="#showcase"?"showcase":"collection"; }
+function view(){ return location.hash.startsWith("#u-")?"public":location.hash==="#showcase"?"showcase":"collection"; }
 function render(){
-  const v=view();
+  const v=view(); if(v==="public"){ $("nav-collection").removeAttribute("aria-current"); $("nav-showcase").removeAttribute("aria-current"); renderPublic(); return; }
   $("nav-collection").toggleAttribute("aria-current",false); $("nav-showcase").toggleAttribute("aria-current",false);
   $("nav-"+v).setAttribute("aria-current","page");
   const all=shown();
@@ -480,21 +512,100 @@ let idb=null;
 function openDB(){ return new Promise((res,rej)=>{ const r=indexedDB.open("cubby",1); r.onupgradeneeded=()=>r.result.createObjectStore("items",{keyPath:"id"}); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
 function tx(mode,fn){ return new Promise((res,rej)=>{ const t=idb.transaction("items",mode); const q=fn(t.objectStore("items")); t.oncomplete=()=>res(q&&q.result); t.onerror=()=>rej(t.error); t.onabort=()=>rej(t.error); }); }
 function newId(){ return "i"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
-function saveState(){ $("save-state").textContent=S.mode==="local"?"Your collection is saved on this device, in this browser. Export a backup to keep a copy.":"This browser won't save data here. Items you add are lost when you close the page."; }
+function saveState(){ $("save-state").textContent=me?"Signed in as "+(me.email||"your account")+". Your collection syncs to your account.":S.mode==="local"?"Your collection is saved on this device, in this browser. Sign in to sync it across devices.":"This browser won't save data here. Sign in, or items you add are lost when you close the page."; }
 async function saveItem(data,id){
   const now=Date.now(); const prev=S.items.find(i=>i.id===id);
   const doc={...data,id:id||newId(),createdAt:prev?prev.createdAt:now,updatedAt:now};
   if(idb) await tx("readwrite",s=>s.put(doc));
   if(prev) Object.assign(prev,doc); else S.items.push(doc); render();
+  if(me) cloudPut(doc).catch(()=>toast("Saved on this device. Syncing failed and will retry when you reopen Cubby."));
 }
-async function removeItem(id){ if(idb) await tx("readwrite",s=>s.delete(id)); S.items=S.items.filter(i=>i.id!==id); render(); }
+async function removeItem(id){ if(idb) await tx("readwrite",s=>s.delete(id)); S.items=S.items.filter(i=>i.id!==id); render(); if(me) cloudDel(id).catch(()=>toast("Deleted on this device, but your account couldn't be reached.")); }
 async function boot(){
   render();
   try{ idb=await openDB(); S.items=(await tx("readonly",s=>s.getAll()))||[]; S.mode="local"; }catch(e){ idb=null; S.mode="memory"; }
   S.loaded=true; saveState(); render();
+  if(sb){ try{ const r=await sb.auth.getSession(); await setUser(r.data.session?r.data.session.user:null); }catch(e){} sb.auth.onAuthStateChange((ev,ses)=>{ setTimeout(()=>setUser(ses?ses.user:null),0); }); }
+}
+
+/* ---- accounts, sync, public showcase ---- */
+const SB_URL="https://dcyjlwggmxdnkhgvbvjr.supabase.co", SB_KEY="sb_publishable_yFWuHcQyiY-IMmnSXrC8kA_s0uBFmlj";
+let sb=null, me=null, profile=null, pub=null, userP=null;
+try{ if(window.supabase) sb=window.supabase.createClient(SB_URL,SB_KEY); }catch(e){ sb=null; }
+function toRow(doc){ const {id,...data}=doc; return {user_id:me.id,id,data,deleted:false,updated_at:doc.updatedAt||Date.now()}; }
+async function cloudPut(doc){ if(!sb||!me) return; const {error}=await sb.from("items").upsert(toRow(doc)); if(error) throw error; }
+async function cloudDel(id){ if(!sb||!me) return; const {error}=await sb.from("items").upsert({user_id:me.id,id,data:{},deleted:true,updated_at:Date.now()}); if(error) throw error; }
+async function syncAll(){
+  if(!sb||!me) return;
+  const {data,error}=await sb.from("items").select("id,data,deleted,updated_at"); if(error) throw error;
+  const seen=new Set(data.map(r=>r.id)); const local=new Map(S.items.map(i=>[i.id,i])); const up=[];
+  for(const r of data){
+    const l=local.get(r.id), lt=l?(l.updatedAt||0):-1;
+    if(r.deleted){ if(l&&lt<=r.updated_at){ local.delete(r.id); if(idb) await tx("readwrite",s=>s.delete(r.id)); } else if(l) up.push(l); }
+    else if(lt<r.updated_at){ const doc={...r.data,id:r.id,updatedAt:r.updated_at}; local.set(r.id,doc); if(idb) await tx("readwrite",s=>s.put(doc)); }
+    else if(lt>r.updated_at) up.push(l);
+  }
+  for(const l of S.items) if(!seen.has(l.id)) up.push(l);
+  S.items=[...local.values()];
+  for(let i=0;i<up.length;i+=20){ const r=await sb.from("items").upsert(up.slice(i,i+20).map(toRow)); if(r.error) throw r.error; }
+  render();
+}
+function setUser(u){
+  if((u&&u.id)===(me&&me.id)) return userP||Promise.resolve();
+  me=u; profile=null; $("acct-btn").textContent=u?"Account":"Sign in"; saveState();
+  userP=(async()=>{ if(!u) return;
+    try{ const r=await sb.from("profiles").select("username,showcase").eq("id",u.id).maybeSingle(); profile=r.data||null; await syncAll(); }
+    catch(e){ toast("Couldn't sync with your account. Check your connection."); } })();
+  return userP;
+}
+function renderPublic(){
+  const uname=decodeURIComponent(location.hash.slice(3)).toLowerCase().replace(/[^a-z0-9_-]/g,"").slice(0,20);
+  if(!pub||pub.uname!==uname){ pub={uname,items:null,err:""}; loadPublic(uname); }
+  const list=pub.items||[];
+  $("main").innerHTML=`<div class="showhead"><div style="margin-right:auto"><h1>${esc(uname)}'s collection</h1><p>${pub.items?list.length+" piece"+(list.length===1?"":"s")+" on show":esc(pub.err||"Loading.")}</p></div><a class="btn" href="#collection">Open my Cubby</a></div>
+  <div class="grid show">${list.map(it=>`<div class="card still">${tile(it)}<div class="meta"><div class="nm">${esc(it.name)}</div><div class="sub">${esc([it.maker,it.detail].filter(Boolean).join(" · "))}</div>${it.status==="forsale"?'<div class="row"><span></span><span class="pill forsale">For sale</span></div>':""}</div></div>`).join("")}</div>`;
+}
+async function loadPublic(uname){
+  let data=null, error=null;
+  if(!sb||!uname) error=true; else { try{ const r=await sb.rpc("showcase",{uname}); data=r.data; error=r.error; }catch(e){ error=e; } }
+  if(!pub||pub.uname!==uname) return;
+  if(error||!Array.isArray(data)) pub.err="This showcase can't be loaded right now.";
+  else if(!data.length) pub.err="Nothing to see. This showcase is private or empty.";
+  else pub.items=data.map(r=>({name:String(r.name||""),cat:CATS[r.cat]?r.cat:"closet",maker:r.maker||"",detail:r.detail||"",status:r.status,photo:typeof r.photo==="string"&&r.photo.startsWith("data:image/")?r.photo:""}));
+  if(view()==="public") render();
+}
+function showLink(){ return profile&&profile.username&&profile.showcase?location.origin+location.pathname+"#u-"+profile.username:""; }
+function linkView(){ const l=showLink(); $("a-link").textContent=l?"Your public link: "+l:"Your showcase is private."; $("copylink-btn").hidden=!l; }
+function acctView(){
+  $("auth-form").hidden=!!me; $("prof-form").hidden=!me; $("a-msg").textContent="";
+  if(me){ $("a-who").textContent="Signed in as "+(me.email||"your account")+"."; $("a-user").value=profile&&profile.username||""; $("a-public").checked=!!(profile&&profile.showcase); linkView(); }
+}
+async function auth(kind){
+  const email=$("a-email").value.trim(), password=$("a-pass").value, msg=$("a-msg");
+  if(!/^\S+@\S+\.\S+$/.test(email)){ msg.textContent="Enter your email address."; return; }
+  if(password.length<8){ msg.textContent="Use a password of at least 8 characters."; return; }
+  msg.textContent=kind==="up"?"Creating your account.":"Signing in.";
+  let r; try{ r=kind==="up"?await sb.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}}):await sb.auth.signInWithPassword({email,password}); }catch(e){ r={error:{message:"no connection"}}; }
+  if(r.error){ msg.textContent=(kind==="up"?"Couldn't create the account: ":"Couldn't sign in: ")+r.error.message+"."; return; }
+  $("a-pass").value="";
+  if(!r.data.session){ msg.textContent="Check your email for a confirmation link, then come back and sign in."; return; }
+  await setUser(r.data.session.user); acctView(); $("a-msg").textContent="You're signed in. Your collection now syncs to your account.";
 }
 
 /* ---- events ---- */
+$("acct-btn").onclick=()=>{ if(!sb){ toast("Accounts couldn't load. Check your connection and reload."); return; } acctView(); $("acct").showModal(); };
+$("acct-close").onclick=()=>$("acct").close();
+$("auth-form").addEventListener("submit",e=>{ e.preventDefault(); auth("in"); });
+$("signup-btn").onclick=()=>auth("up");
+$("prof-form").addEventListener("submit",async e=>{
+  e.preventDefault(); const username=$("a-user").value.trim().toLowerCase(), showcase=$("a-public").checked, msg=$("a-msg");
+  if(!/^[a-z0-9_-]{3,20}$/.test(username)){ msg.textContent="Pick a showcase name of 3 to 20 letters, numbers, - or _."; return; }
+  const {error}=await sb.from("profiles").upsert({id:me.id,username,showcase,updated_at:new Date().toISOString()});
+  if(error){ msg.textContent=error.code==="23505"?"That showcase name is taken. Try another.":"Couldn't save: "+error.message+"."; return; }
+  profile={username,showcase}; linkView(); msg.textContent="Saved.";
+});
+$("copylink-btn").onclick=()=>copy(showLink());
+$("signout-btn").onclick=async()=>{ try{ await sb.auth.signOut(); }catch(e){} await setUser(null); acctView(); };
 $("add-btn").onclick=()=>openItem(null);
 $("close-btn").onclick=()=>$("dlg").close();
 $("dlg").addEventListener("close",stopScan);
