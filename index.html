@@ -225,6 +225,64 @@ dialog{background:#C0C0C0;color:#000;border:2px solid;border-color:#fff #000 #00
 .foot{border-top:2px solid #808080;padding-top:10px;margin-top:20px;font-size:12px}
 .foot::after{content:"Best viewed at 800 x 600.";flex-basis:100%;font-family:var(--display);font-style:italic;font-size:13px}
 @media (max-width:420px){.wrap{margin:8px;padding:0 8px 16px}header{margin:0 -8px 10px}}
+
+/* layers: organization, money, series, stats, report, quick scan */
+.fg .more{grid-column:1/-1;border:2px solid;border-color:#808080 #fff #fff #808080;padding:6px 8px}
+.more summary{cursor:pointer;font-weight:700;color:var(--ink)}
+.more .fg{margin-top:10px}
+.hist{margin-top:10px;display:flex;flex-direction:column;gap:4px;color:var(--ink)}
+.chart{width:100%;height:auto;display:block;background:#fff;border:1px solid #808080}
+.chart .ln{fill:none;stroke:var(--accent);stroke-width:2.5}
+.chart .ar{fill:var(--c2);opacity:.18}
+.chart .ax{stroke:#808080}
+.chart .pt{fill:var(--accent)}
+.chart text{fill:#000;font-size:12px;font-family:var(--body)}
+.tagrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-4px 0 12px}
+.chip{background:#C0C0C0;color:#000;border:2px solid;border-color:#fff #000 #000 #fff;padding:2px 8px;font-size:12px;cursor:pointer;border-radius:0}
+.chip[aria-pressed="true"]{border-color:#000 #fff #fff #000;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.bulk{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#FFFFCC;border:1px solid #000;padding:8px;margin-bottom:12px}
+.card.picked{outline:3px solid var(--accent);outline-offset:-3px;background:#dfe6ff}
+.ghead{grid-column:1/-1;margin:8px 0 0;font-size:15px;border-bottom:2px solid #808080;padding-bottom:4px;color:var(--ink)}
+.ghead small{font-weight:400;color:var(--muted)}
+.sub.lent{color:#804000;font-weight:700}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:14px}
+.panel{background:var(--surface);color:var(--ink);border:2px solid;border-color:#808080 #fff #fff #808080;padding:10px 12px;min-width:0}
+.panel.wide{grid-column:1/-1}
+.panel h3{margin:0 0 8px;font-size:15px}
+.panel p{margin:6px 0}
+.panel ol,.panel ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:3px}
+.slist{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.bar{height:16px;border:2px solid;border-color:#808080 #fff #fff #808080;background:#fff}
+.bar span{display:block;height:100%;background:var(--accent)}
+.hbar{display:grid;grid-template-columns:minmax(0,120px) 1fr auto;gap:8px;align-items:center;font-size:13px;margin:5px 0}
+.hbar .tr{background:#fff;border:1px solid #808080;height:14px}
+.hbar .tr span{display:block;height:100%;background:var(--accent)}
+.linkbtn{background:none;border:0;padding:0;color:#0000EE;text-decoration:underline;cursor:pointer;font:inherit;text-align:left}
+.stat .v.up{color:#006000}.stat .v.down{color:#C00000}
+.tablewrap{overflow-x:auto}
+.rtable{width:100%;border-collapse:collapse;background:#fff;color:#000;font-size:13px}
+.rtable th,.rtable td{border:1px solid #808080;padding:4px 6px;text-align:left;vertical-align:top}
+.rtable th{background:#000080;color:#fff;font-weight:700}
+.rtable .n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rtable img{width:48px;height:48px;object-fit:cover;display:block}
+.rtable tfoot td{font-weight:700;background:#C0C0C0}
+.qsmode{display:flex;flex-direction:column;gap:6px}
+.qsmode label{display:flex;gap:8px;align-items:center}
+#qs-opts[hidden]{display:none}
+.qsrun{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.qsrun .bc{flex:1;min-width:200px}
+#qs-video{width:100%;max-height:260px;object-fit:cover;background:#000;border:1px solid #000}
+#qs-video[hidden]{display:none}
+.qsbig{padding:10px;border:1px solid #000;background:#FFFFCC;color:#000;font-size:15px}
+.qsbig.yes{background:#CCFFCC}.qsbig.no{background:#FFCCCC}
+.qslog{margin:0;padding-left:20px;max-height:180px;overflow:auto;font-size:13px}
+@media print{
+  header,.stripes,.foot,.noprint,#toast,dialog{display:none!important}
+  html,body{background:#fff!important}
+  .wrap{border:0!important;box-shadow:none!important;margin:0!important;max-width:none!important;padding:0!important;background:#fff!important}
+  .rtable th{background:#eee!important;color:#000!important}
+}
 </style>
 </head>
 <body>
@@ -233,15 +291,19 @@ dialog{background:#C0C0C0;color:#000;border:2px solid;border-color:#fff #000 #00
     <div class="brand">Cubby<span>.</span></div>
     <nav aria-label="Views">
       <a href="#collection" id="nav-collection">Collection</a>
+      <a href="#series" id="nav-series">Series</a>
+      <a href="#stats" id="nav-stats">Stats</a>
       <a href="#showcase" id="nav-showcase">Showcase</a>
     </nav>
     <button class="btn" id="acct-btn" type="button">Sign in</button>
+    <button class="btn" id="qs-btn" type="button">Quick scan</button>
     <button class="btn primary" id="add-btn" type="button">Add item</button>
   </header>
   <div class="stripes" aria-hidden="true"></div>
   <main id="main"></main>
   <div class="foot">
     <span id="save-state">Loading your collection.</span>
+    <button class="btn" type="button" id="csv-foot">Export spreadsheet</button>
     <button class="btn" type="button" id="export-btn">Export backup</button>
     <label class="btn" for="import-file">Import backup</label>
     <input type="file" id="import-file" accept="application/json,.json" hidden>
@@ -283,8 +345,24 @@ dialog{background:#C0C0C0;color:#000;border:2px solid;border-color:#fff #000 #00
         <label>You paid ($)<input class="field" id="f-paid" inputmode="decimal" autocomplete="off"></label>
         <label>Worth now ($)<input class="field" id="f-value" inputmode="decimal" autocomplete="off"></label>
         <label class="full">Status<select class="field" id="f-status"><option value="owned">In my collection</option><option value="forsale">For sale</option><option value="sold">Sold</option><option value="wishlist">Wishlist</option></select></label>
-        <label class="full">Where it's kept<input class="field" id="f-loc" list="loc-list" autocomplete="off" placeholder="Bedroom closet, shelf 2"><datalist id="loc-list"></datalist></label>
+        <label class="full">Where it's kept<input class="field" id="f-loc" list="loc-list" autocomplete="off" placeholder="Bedroom > Closet > Shelf 2"><datalist id="loc-list"></datalist></label>
         <label class="full">Notes<textarea class="field" id="f-notes" rows="2"></textarea></label>
+        <details class="more" id="more">
+          <summary>More details: tags, series, purchase, sale and loans</summary>
+          <div class="fg">
+            <label class="full">Tags<input class="field" id="f-tags" autocomplete="off" placeholder="signed, first edition, grail"></label>
+            <label class="full">Series or set<input class="field" id="f-series" list="series-list" autocomplete="off" placeholder="Marvel Funko Pops"><datalist id="series-list"></datalist></label>
+            <label>Number in series<input class="field" id="f-snum" autocomplete="off" placeholder="3"></label>
+            <label>Items in the full series<input class="field" id="f-stotal" inputmode="numeric" autocomplete="off" placeholder="12"></label>
+            <label>Bought on<input class="field" id="f-pdate" type="date"></label>
+            <label>Bought from<input class="field" id="f-store" autocomplete="off"></label>
+            <label>Sold for ($)<input class="field" id="f-sprice" inputmode="decimal" autocomplete="off"></label>
+            <label>Sold on<input class="field" id="f-sdate" type="date"></label>
+            <label>Lent to<input class="field" id="f-lent" autocomplete="off"></label>
+            <label>Lent on<input class="field" id="f-ldate" type="date"></label>
+          </div>
+          <div id="f-hist"></div>
+        </details>
       </div>
       <div class="listing" id="listing" hidden>
         <label class="hint" for="f-listing">Listing text for Vinted, eBay or anywhere else. Edit it, then copy.</label>
@@ -322,6 +400,23 @@ dialog{background:#C0C0C0;color:#000;border:2px solid;border-color:#fff #000 #00
       <div class="dfoot"><button class="btn danger sp" type="button" id="signout-btn">Sign out</button><button class="btn" type="button" id="copylink-btn" hidden>Copy link</button><button class="btn primary" type="submit">Save</button></div>
     </form>
     <p class="hint" id="a-msg" role="status"></p>
+  </div>
+</dialog>
+<dialog id="qs" aria-labelledby="qs-title">
+  <div class="dhead"><h2 id="qs-title">Quick scan</h2><button class="btn" type="button" id="qs-close">Close</button></div>
+  <div class="dbody">
+    <div class="qsmode" role="radiogroup" aria-label="What scanning does">
+      <label><input type="radio" name="qsm" value="add" checked> Add each item to my collection</label>
+      <label><input type="radio" name="qsm" value="check"> Just check whether I own it</label>
+    </div>
+    <div class="fg" id="qs-opts">
+      <label>If the lookup can't tell, file under<select class="field" id="qs-cat"></select></label>
+      <label>Where it's kept<input class="field" id="qs-loc" list="loc-list" autocomplete="off" placeholder="Optional"></label>
+    </div>
+    <div class="qsrun"><button class="btn primary" type="button" id="qs-start">Start camera</button><span class="bc"><input class="field" id="qs-code" inputmode="numeric" placeholder="Or type a barcode" autocomplete="off" aria-label="Barcode number"><button class="btn" type="button" id="qs-go">Add</button></span></div>
+    <video id="qs-video" playsinline muted hidden></video>
+    <div class="qsbig" id="qs-big" role="status" hidden></div>
+    <ol class="qslog" id="qs-log"></ol>
   </div>
 </dialog>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -397,6 +492,42 @@ function guessCat(category,title){
   if(has("poster","art print","painting")) return {cat:"art",type:has("poster")?"Posters":"Prints"};
   return null;
 }
+function dayOf(ts){ return new Date(ts).toISOString().slice(0,10); }
+function splitTags(s){ return [...new Set(String(s||"").split(",").map(t=>t.trim().replace(/\s+/g," ").slice(0,30)).filter(Boolean))].slice(0,20); }
+function normLoc(s){ return String(s||"").split(">").map(p=>p.trim().replace(/\s+/g," ")).filter(Boolean).join(" > ").slice(0,120); }
+function locPrefixes(items){ const set=new Set(); for(const i of items){ const parts=String(i.location||"").split(" > ").filter(Boolean); for(let k=1;k<=parts.length;k++) set.add(parts.slice(0,k).join(" > ")); } return [...set].sort((a,b)=>a.localeCompare(b)); }
+function inLoc(i,loc){ const l=i.location||""; return l===loc||l.startsWith(loc+" > "); }
+function histNext(h,v,seed){
+  const out=Array.isArray(h)?h.filter(x=>x&&typeof x.v==="number"&&typeof x.d==="string").map(x=>({d:x.d,v:x.v})):[];
+  if(!out.length&&seed&&typeof seed.v==="number") out.push({d:seed.d,v:seed.v});
+  if(typeof v!=="number") return out.slice(-60);
+  const day=dayOf(Date.now()), last=out[out.length-1];
+  if(!last||last.v!==v){ if(last&&last.d===day) last.v=v; else out.push({d:day,v}); }
+  return out.slice(-60);
+}
+function histOf(i){ return Array.isArray(i.valueHistory)&&i.valueHistory.length?i.valueHistory:typeof i.value==="number"?[{d:dayOf(i.createdAt||Date.now()),v:i.value}]:[]; }
+function valueSeries(items){
+  const mine=items.filter(i=>i.status==="owned"||i.status==="forsale").map(histOf).filter(h=>h.length);
+  const days=[...new Set(mine.flatMap(h=>h.map(x=>x.d)))].sort();
+  return days.map(d=>({d,v:mine.reduce((t,h)=>{ let v=0; for(const x of h){ if(x.d<=d) v=x.v; else break; } return t+v; },0)}));
+}
+function soldStats(items){ const s=items.filter(i=>i.status==="sold"), w=s.filter(i=>typeof i.soldPrice==="number"); return {count:s.length,priced:w.length,revenue:w.reduce((t,i)=>t+i.soldPrice,0),profit:w.reduce((t,i)=>t+i.soldPrice-(typeof i.paid==="number"?i.paid:0),0)}; }
+function seriesSummary(items){
+  const m=new Map();
+  for(const i of items){ if(!i.series||i.status==="sold") continue; const k=String(i.series).trim(); if(!m.has(k)) m.set(k,{name:k,items:[],wish:[],total:0}); const g=m.get(k);
+    (i.status==="wishlist"?g.wish:g.items).push(i); const t=Number(i.seriesTotal); if(t>g.total) g.total=Math.floor(t); }
+  return [...m.values()].map(g=>{
+    const have=new Set(g.items.map(i=>String(i.seriesNum||"").trim().replace(/^#/,"")).filter(Boolean));
+    const missing=[]; let owned=g.items.length;
+    if(g.total>0&&g.total<=1000){ for(let n=1;n<=g.total;n++) if(!have.has(String(n))) missing.push(n); owned=g.total-missing.length; }
+    return {...g,owned,missing};
+  }).sort((a,b)=>a.name.localeCompare(b.name));
+}
+const CSV_COLS=[["name","Name"],["cat","Collection"],["type","Type"],["maker","Maker"],["detail","Detail"],["condition","Condition"],["barcode","Barcode"],["status","Status"],["location","Where it's kept"],["tags","Tags"],["series","Series"],["seriesNum","Number in series"],["seriesTotal","Series size"],["paid","Paid"],["value","Worth now"],["purchaseDate","Bought on"],["store","Bought from"],["soldPrice","Sold for"],["soldDate","Sold on"],["lentTo","Lent to"],["lentDate","Lent on"],["notes","Notes"]];
+function csvOf(items){
+  const q=v=>{ let x=Array.isArray(v)?v.join(", "):v==null?"":String(v); if(/^[=+\-@\t\r]/.test(x)&&isNaN(Number(x))) x="'"+x; return /[",\n\r]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x; };
+  return [CSV_COLS.map(c=>c[1]).join(","),...items.map(i=>CSV_COLS.map(([k])=>q(k==="cat"?((CATS[i.cat]||{}).label||i.cat):k==="status"?(STATUS[i.status]||i.status):i[k])).join(","))].join("\r\n");
+}
 /* ---- end pure logic ---- */
 
 const EXAMPLES=[
@@ -413,7 +544,7 @@ const EXAMPLES=[
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const S={items:[],loaded:false,mode:"none",cat:"all",status:"all",sort:"new",q:"",loc:"all",col:null,sample:null,canSee:false,slow:false};
+const S={items:[],loaded:false,mode:"none",cat:"all",status:"all",sort:"new",q:"",loc:"all",tag:"",group:"none",sel:null,quiet:false,col:null,sample:null,canSee:false,slow:false};
 let editing=null, photoData="", delArmed=false, toastT=0;
 
 function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),2800); }
@@ -421,21 +552,24 @@ function shown(){ return S.items; }
 function initials(it){ return esc(tokens(it.name).slice(0,2).map(t=>t[0].toUpperCase()).join("")||"?"); }
 function tile(it){ return `<div class="ph ${esc(it.cat)}">${it.photo?`<img src="${esc(it.photo)}" alt="">`:`<span class="ini">${initials(it)}</span>`}${it.example?'<span class="ex">Example</span>':""}</div>`; }
 
-function view(){ return location.hash.startsWith("#u-")?"public":location.hash==="#showcase"?"showcase":"collection"; }
+const VIEWS={"#showcase":"showcase","#series":"series","#stats":"stats","#report":"report"};
+function view(){ return location.hash.startsWith("#u-")?"public":VIEWS[location.hash]||"collection"; }
 function render(){
-  const v=view(); if(v==="public"){ $("nav-collection").removeAttribute("aria-current"); $("nav-showcase").removeAttribute("aria-current"); renderPublic(); return; }
-  $("nav-collection").toggleAttribute("aria-current",false); $("nav-showcase").toggleAttribute("aria-current",false);
-  $("nav-"+v).setAttribute("aria-current","page");
+  const v=view(); document.querySelectorAll("nav a").forEach(a=>a.removeAttribute("aria-current")); document.body.classList.toggle("is-report",v==="report");
+  if(v==="public"){ renderPublic(); return; }
+  const nv=$("nav-"+(v==="report"?"stats":v)); if(nv) nv.setAttribute("aria-current","page");
   const all=shown();
   if(!S.loaded){ $("main").innerHTML=`<div class="note">${S.slow?"Your saved collection can't be reached yet. Still trying.":"Loading your collection."}</div>`; return; }
-  $("main").innerHTML = v==="showcase" ? showcaseHTML(all) : collectionHTML(all);
+  $("main").innerHTML = v==="showcase" ? showcaseHTML(all) : v==="series" ? seriesHTML(all) : v==="stats" ? statsHTML(all) : v==="report" ? reportHTML(all) : collectionHTML(all);
+  if(v==="collection") $("loc-list").innerHTML=locs(S.items).map(x=>`<option value="${esc(x)}">`).join("");
   const q=$("search"); if(q){ q.value=S.q; }
 }
 function filtered(all){
-  if(S.loc!=="all"&&!all.some(i=>i.location===S.loc)) S.loc="all";
-  let list=all.filter(i=>(S.cat==="all"||i.cat===S.cat)&&(S.status==="all"||i.status===S.status)&&(S.loc==="all"||i.location===S.loc));
-  if(S.q.trim()){ const qt=tokens(S.q); const qd=digits(S.q); list=list.filter(i=>{ const hay=tokens([i.name,i.maker,i.detail,i.type,i.notes,i.location].join(" ")); return qt.every(t=>hay.some(h=>h.startsWith(t))) || (qd.length>=4 && digits(i.barcode).includes(qd)); }); }
-  const by={new:(a,b)=>(b.createdAt||0)-(a.createdAt||0), name:(a,b)=>a.name.localeCompare(b.name), value:(a,b)=>(b.value||0)-(a.value||0)}[S.sort];
+  if(S.loc!=="all"&&!locs(all).includes(S.loc)) S.loc="all";
+  if(S.tag&&!all.some(i=>(i.tags||[]).includes(S.tag))) S.tag="";
+  let list=all.filter(i=>(S.cat==="all"||i.cat===S.cat)&&(S.status==="all"||(S.status==="lent"?!!i.lentTo&&i.status!=="sold":i.status===S.status))&&(S.loc==="all"||inLoc(i,S.loc))&&(!S.tag||(i.tags||[]).includes(S.tag)));
+  if(S.q.trim()){ const qt=tokens(S.q); const qd=digits(S.q); list=list.filter(i=>{ const hay=tokens([i.name,i.maker,i.detail,i.type,i.notes,i.location,(i.tags||[]).join(" "),i.series,i.store,i.lentTo].join(" ")); return qt.every(t=>hay.some(h=>h.startsWith(t))) || (qd.length>=4 && digits(i.barcode).includes(qd)); }); }
+  const by={new:(a,b)=>(b.createdAt||0)-(a.createdAt||0), name:(a,b)=>a.name.localeCompare(b.name), value:(a,b)=>(b.value||0)-(a.value||0), paid:(a,b)=>(b.paid||0)-(a.paid||0), gain:(a,b)=>((b.value||0)-(b.paid||0))-((a.value||0)-(a.paid||0)), series:(a,b)=>(a.series?0:1)-(b.series?0:1)||String(a.series||"").localeCompare(String(b.series||""))||(parseFloat(String(a.seriesNum).replace("#",""))||0)-(parseFloat(String(b.seriesNum).replace("#",""))||0)}[S.sort];
   return S.items.length? list.slice().sort(by) : (S.sort==="new"?list:list.slice().sort(by));
 }
 function collectionHTML(all){
@@ -453,25 +587,119 @@ function collectionHTML(all){
   <div class="controls">
     <div class="tabs" role="group" aria-label="Collections">${tabs.map(([k,l,n])=>`<button class="tab" type="button" data-cat="${k}" aria-pressed="${S.cat===k}">${l}<b>${n}</b></button>`).join("")}</div>
     <input class="field" id="search" type="search" placeholder="Search or enter barcode" aria-label="Search your collection">
-    <select class="field" id="status-sel" aria-label="Status">${[["all","Any status"],...Object.entries(STATUS)].map(([k,l])=>`<option value="${k}"${S.status===k?" selected":""}>${l}</option>`).join("")}</select>
-    ${locSel(all)}<select class="field" id="sort-sel" aria-label="Sort">${[["new","Newest first"],["name","Name"],["value","Highest value"]].map(([k,l])=>`<option value="${k}"${S.sort===k?" selected":""}>${l}</option>`).join("")}</select>
+    <select class="field" id="status-sel" aria-label="Status">${[["all","Any status"],...Object.entries(STATUS),["lent","On loan"]].map(([k,l])=>`<option value="${k}"${S.status===k?" selected":""}>${l}</option>`).join("")}</select>
+    ${locSel(all)}<select class="field" id="sort-sel" aria-label="Sort">${[["new","Newest first"],["name","Name"],["value","Highest value"],["paid","Highest price paid"],["gain","Biggest gain"],["series","Series order"]].map(([k,l])=>`<option value="${k}"${S.sort===k?" selected":""}>${l}</option>`).join("")}</select>
+    ${groupSel()}<button class="btn" type="button" id="sel-btn">${S.sel?"Stop selecting":"Select items"}</button>
   </div>
+  ${tagRow(all)}${S.sel?bulkHTML():""}
   <div class="grid" id="grid">${gridHTML(list)}</div>`;
 }
-function locs(all){ return [...new Set(all.map(i=>i.location).filter(Boolean))].sort((a,b)=>a.localeCompare(b)); }
-function locSel(all){ const l=locs(all); return l.length?`<select class="field" id="loc-sel" aria-label="Where it is kept"><option value="all">Kept anywhere</option>${l.map(x=>`<option value="${esc(x)}"${S.loc===x?" selected":""}>${esc(x)}</option>`).join("")}</select>`:""; }
+function locs(all){ return locPrefixes(all); }
+function locSel(all){ const l=locs(all); return l.length?`<select class="field" id="loc-sel" aria-label="Where it is kept"><option value="all">Kept anywhere</option>${l.map(x=>`<option value="${esc(x)}"${S.loc===x?" selected":""}>${"\u00a0\u00a0\u00a0".repeat(x.split(" > ").length-1)+esc(x.split(" > ").pop())}</option>`).join("")}</select>`:""; }
 function gridHTML(list){
+  if(list.length&&S.group!=="none"){ const m=new Map(); for(const i of list) for(const k of groupKey(i)){ if(!m.has(k)) m.set(k,[]); m.get(k).push(i); } return [...m.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([k,v])=>`<h3 class="ghead">${esc(k)} <small>${v.length} item${v.length===1?"":"s"}, ${money(v.reduce((t,i)=>t+(i.value||0),0))||"$0"}</small></h3>`+v.map(cardHTML).join("")).join(""); }
   return list.length? list.map(cardHTML).join("") : !S.items.length? "" : `<div class="empty">Nothing matches. ${S.q.trim()?"You don't own this yet, as far as Cubby can tell.":"Try another filter."}</div>`;
 }
 function cardHTML(it){
   const sub=[it.maker,it.detail||it.type].filter(Boolean).join(" · ");
-  return `<button class="card" type="button" data-id="${esc(it.id)}">${tile(it)}<div class="meta"><div class="nm">${esc(it.name)}</div><div class="sub">${esc(sub)}</div>${it.location?`<div class="sub loc">Kept: ${esc(it.location)}</div>`:""}<div class="row"><span class="val">${money(it.value)}</span>${it.status!=="owned"?`<span class="pill ${esc(it.status)}">${STATUS[it.status]||""}</span>`:""}</div></div></button>`;
+  return `<button class="card${S.sel&&S.sel.has(it.id)?" picked":""}" type="button" data-id="${esc(it.id)}"${S.sel?` aria-pressed="${S.sel.has(it.id)}"`:""}>${tile(it)}<div class="meta"><div class="nm">${esc(it.name)}</div><div class="sub">${esc(sub)}</div>${it.series?`<div class="sub">${esc(it.series)}${it.seriesNum?" #"+esc(String(it.seriesNum).replace(/^#/,"")):""}</div>`:""}${it.location?`<div class="sub loc">Kept: ${esc(it.location)}</div>`:""}${it.lentTo&&it.status!=="sold"?`<div class="sub lent">Lent to ${esc(it.lentTo)}</div>`:""}<div class="row"><span class="val">${money(it.value)}</span>${it.status!=="owned"?`<span class="pill ${esc(it.status)}">${STATUS[it.status]||""}</span>`:""}</div></div></button>`;
 }
 function showcaseHTML(all){
   const mine=all.filter(i=>i.status==="owned"||i.status==="forsale").sort((a,b)=>(b.photo?1:0)-(a.photo?1:0));
   const parts=Object.entries(CATS).map(([k,c])=>[c.label.toLowerCase(),mine.filter(i=>i.cat===k).length]).filter(p=>p[1]).map(p=>p[1]+" "+p[0]).join(", ");
   return `<div class="showhead"><div style="margin-right:auto"><h1>${mine.length} piece${mine.length===1?"":"s"} worth showing off</h1><p>${esc(parts)||"Add items to fill your showcase."}</p></div><button class="btn" type="button" id="copy-list">Copy as a list</button></div>
   <div class="grid show">${mine.length?mine.map(it=>`<button class="card" type="button" data-id="${esc(it.id)}">${tile(it)}<div class="meta"><div class="nm">${esc(it.name)}</div><div class="sub">${esc([it.maker,it.detail].filter(Boolean).join(" · "))}</div></div></button>`).join(""):'<div class="empty">Nothing here yet.</div>'}</div>`;
+}
+
+/* ---- organization, money, series, stats, report ---- */
+function groupKey(i){ switch(S.group){ case "cat": return [(CATS[i.cat]||{}).label||"Other"]; case "loc": return [String(i.location||"").split(" > ")[0]||"No location"]; case "series": return [i.series||"Not in a series"]; case "tag": return i.tags&&i.tags.length?i.tags:["No tags"]; case "maker": return [i.maker||"No maker"]; } return [""]; }
+function groupSel(){ return `<select class="field" id="group-sel" aria-label="Group by">${[["none","No grouping"],["cat","Group by collection"],["loc","Group by location"],["series","Group by series"],["tag","Group by tag"],["maker","Group by maker"]].map(([k,l])=>`<option value="${k}"${S.group===k?" selected":""}>${l}</option>`).join("")}</select>`; }
+function tagRow(all){ const tags=[...new Set(all.flatMap(i=>i.tags||[]))].sort((a,b)=>a.localeCompare(b)); if(!tags.length) return ""; return `<div class="tagrow" role="group" aria-label="Filter by tag"><span>Tags:</span>${[["","All"],...tags.map(t=>[t,t])].map(([v,l])=>`<button class="chip" type="button" data-tag="${esc(v)}" aria-pressed="${S.tag===v}">${esc(l)}</button>`).join("")}</div>`; }
+function bulkHTML(){ return `<div class="bulk" id="bulk"><b id="bk-count">${S.sel.size} selected</b>
+  <button class="btn" type="button" data-bulk="all">Select all shown</button><button class="btn" type="button" data-bulk="none">Clear</button>
+  <select class="field" id="bk-status" aria-label="Change status"><option value="">Keep status</option>${Object.entries(STATUS).map(([k,l])=>`<option value="${k}">${l}</option>`).join("")}</select>
+  <input class="field" id="bk-loc" list="loc-list" autocomplete="off" placeholder="Move to location" aria-label="Move to location">
+  <input class="field" id="bk-tag" autocomplete="off" placeholder="Add a tag" aria-label="Add a tag">
+  <button class="btn primary" type="button" data-bulk="apply">Apply to selected</button><button class="btn danger" type="button" data-bulk="del">Delete selected</button></div>`; }
+async function bulk(act,btn){
+  if(act==="all"){ filtered(shown()).forEach(i=>S.sel.add(i.id)); render(); return; }
+  if(act==="none"){ S.sel.clear(); render(); return; }
+  const ids=[...S.sel]; if(!ids.length){ toast("Select some items first."); return; }
+  if(act==="del"){
+    if(btn.dataset.armed!=="1"){ btn.dataset.armed="1"; btn.textContent="Press again to delete "+ids.length; return; }
+    S.quiet=true; try{ for(const id of ids) await removeItem(id); }catch(e){ toast("Some items couldn't be deleted."); }finally{ S.quiet=false; }
+    S.sel.clear(); render(); toast("Deleted "+ids.length+" item"+(ids.length===1?"":"s")+"."); return;
+  }
+  if(act==="apply"){
+    const st=$("bk-status").value, loc=normLoc($("bk-loc").value), tag=$("bk-tag").value.trim();
+    if(!st&&!loc&&!tag){ toast("Choose a status, a location or a tag to apply."); return; }
+    let n=0; S.quiet=true;
+    try{ for(const id of ids){ const it=S.items.find(i=>i.id===id); if(!it) continue; const d={...it}; if(st) d.status=st; if(loc) d.location=loc; if(tag) d.tags=splitTags([...(it.tags||[]),tag].join(",")); await saveItem(d,id); n++; } }
+    catch(e){ toast("Some items couldn't be updated."); }finally{ S.quiet=false; }
+    render(); toast("Updated "+n+" item"+(n===1?"":"s")+".");
+  }
+}
+function chartSVG(pts,W=600,H=200){
+  if(!pts||pts.length<2) return `<p class="hint">The chart starts once a value changes. Each time you update an item's "Worth now", Cubby records it.</p>`;
+  const t=pts.map(p=>Date.parse(p.d)), t0=Math.min(...t), t1=Math.max(...t), vmax=Math.max(1,...pts.map(p=>p.v))*1.12;
+  const L=8,R=8,T=14,B=22, x=ti=>L+(t1===t0?0.5:(ti-t0)/(t1-t0))*(W-L-R), y=v=>T+(1-v/vmax)*(H-T-B);
+  const xy=pts.map((p,i)=>[x(t[i]),y(p.v)]), line=xy.map(([a,b])=>a.toFixed(1)+","+b.toFixed(1)).join(" ");
+  const area=`M${xy[0][0].toFixed(1)},${H-B} L${line.replace(/ /g," L")} L${xy[xy.length-1][0].toFixed(1)},${H-B} Z`;
+  const last=pts[pts.length-1], lx=xy[xy.length-1][0], ly=xy[xy.length-1][1];
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Value from ${esc(pts[0].d)} to ${esc(last.d)}, now ${money(last.v)}"><line class="ax" x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}"/><path class="ar" d="${area}"/><polyline class="ln" points="${line}"/><circle class="pt" cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="4"/><text x="${L}" y="${H-6}">${esc(pts[0].d)}</text><text x="${W-R}" y="${H-6}" text-anchor="end">${esc(last.d)}</text><text x="${Math.max(60,Math.min(lx,W-R-6)).toFixed(1)}" y="${Math.max(ly-9,T+2).toFixed(1)}" text-anchor="end">${money(last.v)}</text></svg>`;
+}
+function histHTML(it){ const h=histOf(it); return h.length<2?"":`<div class="hist"><b>Value history</b>${chartSVG(h,500,140)}<small>${h.slice(-6).map(x=>esc(x.d)+": "+money(x.v)).join(" · ")}</small></div>`; }
+function itemLine(i,extra){ return `<li><button class="linkbtn" type="button" data-open="${esc(i.id)}">${esc(i.name)}</button>${extra?" "+extra:""}</li>`; }
+function seriesHTML(all){
+  const list=seriesSummary(all);
+  if(!list.length) return `<div class="showhead"><div><h1>Series and sets</h1></div></div><div class="note">No series yet. Open an item, choose More details, and fill in "Series or set" and "Number in series". Add "Items in the full series" to see which numbers you're missing.</div>`;
+  return `<div class="showhead"><div style="margin-right:auto"><h1>Series and sets</h1><p>${list.length} series tracked</p></div></div>
+  <div class="slist">${list.map(g=>{ const pct=g.total?Math.round(g.owned/g.total*100):0;
+    return `<section class="panel"><h3>${esc(g.name)}</h3>
+    <p>${g.total?`${g.owned} of ${g.total} owned (${pct}%)`:`${g.items.length} owned. Add the series size to any of its items to see what's missing.`}</p>
+    ${g.total?`<div class="bar" role="img" aria-label="${pct} percent complete"><span style="width:${pct}%"></span></div>`:""}
+    ${g.missing.length?`<p><b>Missing:</b> ${g.missing.slice(0,80).map(n=>"#"+n).join(", ")}${g.missing.length>80?" and more":""}</p>`:g.total?"<p><b>Complete.</b></p>":""}
+    ${g.wish.length?`<p><b>On your wishlist:</b> ${esc(g.wish.map(i=>i.name).join(", "))}</p>`:""}
+    <div class="chips">${g.items.slice().sort((a,b)=>(parseFloat(String(a.seriesNum).replace("#",""))||0)-(parseFloat(String(b.seriesNum).replace("#",""))||0)).map(i=>`<button class="chip" type="button" data-open="${esc(i.id)}">${i.seriesNum?"#"+esc(String(i.seriesNum).replace(/^#/,""))+" ":""}${esc(i.name)}</button>`).join("")}</div></section>`; }).join("")}</div>`;
+}
+function statsHTML(all){
+  const t=totals(all), sd=soldStats(all), ser=valueSeries(all), mine=all.filter(i=>i.status==="owned"||i.status==="forsale"), lent=all.filter(i=>i.lentTo&&i.status!=="sold");
+  const byCat=Object.entries(CATS).map(([k,c])=>{ const v=mine.filter(i=>i.cat===k); return [c.label,v.length,v.reduce((s,i)=>s+(i.value||0),0)]; }).filter(x=>x[1]), maxV=Math.max(1,...byCat.map(x=>x[2]));
+  const top=mine.filter(i=>typeof i.value==="number").sort((a,b)=>b.value-a.value).slice(0,5);
+  const gains=mine.filter(i=>typeof i.value==="number"&&typeof i.paid==="number").map(i=>[i,i.value-i.paid]).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const lm=new Map(); for(const i of mine){ const k=String(i.location||"").split(" > ")[0]||"No location"; lm.set(k,(lm.get(k)||0)+1); }
+  const sold=all.filter(i=>i.status==="sold").sort((a,b)=>String(b.soldDate||"").localeCompare(String(a.soldDate||""))).slice(0,8);
+  const g=t.gain, gc=g>0?"up":g<0?"down":"";
+  return `<div class="showhead"><div style="margin-right:auto"><h1>Collection stats</h1><p>${mine.length} item${mine.length===1?"":"s"} owned across ${byCat.length} collection${byCat.length===1?"":"s"}</p></div><a class="btn" href="#report">Insurance report</a><button class="btn" type="button" id="csv-btn">Export spreadsheet</button></div>
+  <section class="stats" aria-label="Money summary">
+    <div class="stat big"><div class="k">Collection value</div><div class="v">${money(t.value)||"$0"}</div><div class="s">${t.count} item${t.count===1?"":"s"}</div></div>
+    <div class="stat"><div class="k">Gain on paper</div><div class="v ${gc}">${g<0?"-":""}${money(Math.abs(g))||"$0"}</div><div class="s">worth now minus what you paid</div></div>
+    <div class="stat"><div class="k">Profit from sales</div><div class="v">${sd.profit<0?"-":""}${money(Math.abs(sd.profit))||"$0"}</div><div class="s">${sd.count} sold${sd.count>sd.priced?", "+(sd.count-sd.priced)+" without a sale price":""}</div></div>
+    <div class="stat"><div class="k">On loan</div><div class="v">${lent.length}</div><div class="s">${lent.length?"see the list below":"nothing lent out"}</div></div>
+  </section>
+  <div class="panels">
+    <section class="panel wide"><h3>Value over time</h3>${chartSVG(ser)}</section>
+    <section class="panel"><h3>Value by collection</h3>${byCat.length?byCat.map(([l,n,v])=>`<div class="hbar"><span>${esc(l)} (${n})</span><span class="tr"><span style="width:${Math.round(v/maxV*100)}%"></span></span><span>${money(v)||"$0"}</span></div>`).join(""):'<p class="hint">Nothing owned yet.</p>'}</section>
+    <section class="panel"><h3>Most valuable</h3>${top.length?`<ol>${top.map(i=>itemLine(i,money(i.value))).join("")}</ol>`:'<p class="hint">Add values to see your top items.</p>'}</section>
+    <section class="panel"><h3>Biggest gains</h3>${gains.length?`<ol>${gains.map(([i,d])=>itemLine(i,(d<0?"-":"+")+money(Math.abs(d)))).join("")}</ol>`:'<p class="hint">Add what you paid and what items are worth.</p>'}</section>
+    <section class="panel"><h3>Where things are</h3>${lm.size?`<ul>${[...lm.entries()].sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<li>${esc(k)}: ${n}</li>`).join("")}</ul>`:'<p class="hint">Nothing owned yet.</p>'}</section>
+    <section class="panel"><h3>On loan</h3>${lent.length?`<ul>${lent.map(i=>itemLine(i,"to "+esc(i.lentTo)+(i.lentDate?" since "+esc(i.lentDate):""))).join("")}</ul>`:'<p class="hint">Fill in "Lent to" under More details when you lend something.</p>'}</section>
+    <section class="panel"><h3>Recent sales</h3>${sold.length?`<ul>${sold.map(i=>itemLine(i,typeof i.soldPrice==="number"?money(i.soldPrice)+(typeof i.paid==="number"?" ("+(i.soldPrice-i.paid<0?"-":"+")+money(Math.abs(i.soldPrice-i.paid))+")":""):"no sale price")).join("")}</ul>`:'<p class="hint">Mark items as Sold and add "Sold for" to track profit.</p>'}</section>
+  </div>`;
+}
+function reportHTML(all){
+  const mine=all.filter(i=>i.status==="owned"||i.status==="forsale").sort((a,b)=>((CATS[a.cat]||{}).label||"").localeCompare((CATS[b.cat]||{}).label||"")||a.name.localeCompare(b.name));
+  const tv=mine.reduce((t,i)=>t+(i.value||0),0), tp=mine.reduce((t,i)=>t+(i.paid||0),0);
+  return `<div class="report"><div class="showhead"><div style="margin-right:auto"><h1>Collection inventory</h1><p>Prepared ${esc(new Date().toLocaleDateString())} · ${mine.length} item${mine.length===1?"":"s"} · Total value ${money(tv)||"$0"}</p></div><button class="btn noprint" type="button" id="print-btn">Print or save as PDF</button><button class="btn noprint" type="button" id="csv-btn">Export spreadsheet</button><a class="btn noprint" href="#stats">Back to stats</a></div>
+  <div class="tablewrap"><table class="rtable"><thead><tr><th>Photo</th><th>Item</th><th>Collection</th><th>Condition</th><th>Where kept</th><th>Bought</th><th class="n">Paid</th><th class="n">Value</th></tr></thead><tbody>
+  ${mine.map(i=>`<tr><td>${i.photo?`<img src="${esc(i.photo)}" alt="">`:""}</td><td><b>${esc(i.name)}</b><br><small>${esc([i.maker,i.detail,i.barcode?"Barcode "+i.barcode:""].filter(Boolean).join(" · "))}</small></td><td>${esc((CATS[i.cat]||{}).label||"")}</td><td>${esc(i.condition||"")}</td><td>${esc(i.location||"")}</td><td>${esc([i.purchaseDate,i.store].filter(Boolean).join(", "))}</td><td class="n">${money(i.paid)}</td><td class="n">${money(i.value)}</td></tr>`).join("")}
+  </tbody><tfoot><tr><td colspan="6">Total</td><td class="n">${money(tp)||"$0"}</td><td class="n">${money(tv)||"$0"}</td></tr></tfoot></table></div>
+  <p class="hint">Values are the owner's own estimates. Keep receipts and photos with this report.</p></div>`;
+}
+function exportCSV(){
+  if(!S.items.length){ toast("Nothing to export yet."); return; }
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob(["﻿"+csvOf(S.items)],{type:"text/csv"}));
+  a.download="cubby-collection-"+dayOf(Date.now())+".csv"; document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),5000);
 }
 
 /* ---- dialog ---- */
@@ -491,13 +719,16 @@ function openItem(it,scan){
   setCat(d.cat,d.type);
   $("f-name").value=d.name||""; $("f-maker").value=d.maker||""; $("f-detail").value=d.detail||""; $("f-cond").value=d.condition||"";
   $("f-barcode").value=d.barcode||""; $("f-paid").value=d.paid??""; $("f-value").value=d.value??""; $("f-status").value=d.status||"owned"; $("f-notes").value=d.notes||""; $("f-loc").value=d.location||""; $("loc-list").innerHTML=locs(S.items).map(x=>`<option value="${esc(x)}">`).join("");
+  $("f-tags").value=(d.tags||[]).join(", "); $("f-series").value=d.series||""; $("f-snum").value=d.seriesNum||""; $("f-stotal").value=d.seriesTotal??""; $("f-pdate").value=d.purchaseDate||""; $("f-store").value=d.store||""; $("f-sprice").value=d.soldPrice??""; $("f-sdate").value=d.soldDate||""; $("f-lent").value=d.lentTo||""; $("f-ldate").value=d.lentDate||"";
+  $("series-list").innerHTML=[...new Set(S.items.map(i=>i.series).filter(Boolean))].map(x=>`<option value="${esc(x)}">`).join("");
+  $("more").open=!!((d.tags&&d.tags.length)||d.series||d.purchaseDate||d.store||typeof d.soldPrice==="number"||d.lentTo); $("f-hist").innerHTML=editing?histHTML(editing):"";
   photoData=d.photo||""; setPreview(); $("f-photo").value="";
   $("listing").hidden=true; $("copy-btn").hidden=true; $("match").hidden=true; $("scanner").hidden=true; $("results").hidden=true;
   $("delete-btn").hidden=!editing; delArmed=false; $("delete-btn").textContent="Delete"; hint(HINT);
   $("dlg").showModal(); if(scan) startScan(); else if(!it) $("f-name").focus();
 }
 function formItem(){
-  return {name:$("f-name").value.trim(),cat:$("f-cat").value,type:$("f-type").value,maker:$("f-maker").value.trim(),detail:$("f-detail").value.trim(),condition:$("f-cond").value,barcode:$("f-barcode").value.replace(/[^0-9Xx]/g,""),paid:num($("f-paid").value),value:num($("f-value").value),status:$("f-status").value,notes:$("f-notes").value.trim(),location:$("f-loc").value.trim().slice(0,80),photo:photoData};
+  return {name:$("f-name").value.trim(),cat:$("f-cat").value,type:$("f-type").value,maker:$("f-maker").value.trim(),detail:$("f-detail").value.trim(),condition:$("f-cond").value,barcode:$("f-barcode").value.replace(/[^0-9Xx]/g,""),paid:num($("f-paid").value),value:num($("f-value").value),status:$("f-status").value,notes:$("f-notes").value.trim(),location:normLoc($("f-loc").value),tags:splitTags($("f-tags").value),series:$("f-series").value.trim().slice(0,80),seriesNum:$("f-snum").value.trim().replace(/^#/,"").slice(0,12),seriesTotal:num($("f-stotal").value),purchaseDate:$("f-pdate").value,store:$("f-store").value.trim().slice(0,80),soldPrice:num($("f-sprice").value),soldDate:$("f-sdate").value,lentTo:$("f-lent").value.trim().slice(0,60),lentDate:$("f-ldate").value,photo:photoData};
 }
 function checkMatch(){
   const f=formItem(); const m=findMatches(f,S.items,editing?.id); const box=$("match");
@@ -645,17 +876,67 @@ function saveState(){ $("save-state").textContent=me?"Signed in as "+(me.email||
 async function saveItem(data,id){
   const now=Date.now(); const prev=S.items.find(i=>i.id===id);
   const doc={...data,id:id||newId(),createdAt:prev?prev.createdAt:now,updatedAt:now};
+  doc.valueHistory=histNext(Array.isArray(data.valueHistory)?data.valueHistory:prev&&prev.valueHistory,doc.value,prev&&typeof prev.value==="number"?{d:dayOf(prev.createdAt||now),v:prev.value}:null);
   if(idb) await tx("readwrite",s=>s.put(doc));
-  if(prev) Object.assign(prev,doc); else S.items.push(doc); render();
+  if(prev) Object.assign(prev,doc); else S.items.push(doc); if(!S.quiet) render();
   if(me) cloudPut(doc).catch(()=>toast("Saved on this device. Syncing failed and will retry when you reopen Cubby."));
   contribute(doc);
 }
-async function removeItem(id){ if(idb) await tx("readwrite",s=>s.delete(id)); S.items=S.items.filter(i=>i.id!==id); render(); if(me) cloudDel(id).catch(()=>toast("Deleted on this device, but your account couldn't be reached.")); }
+async function removeItem(id){ if(idb) await tx("readwrite",s=>s.delete(id)); S.items=S.items.filter(i=>i.id!==id); if(!S.quiet) render(); if(me) cloudDel(id).catch(()=>toast("Deleted on this device, but your account couldn't be reached.")); }
 async function boot(){
   render();
   try{ idb=await openDB(); S.items=(await tx("readonly",s=>s.getAll()))||[]; S.mode="local"; }catch(e){ idb=null; S.mode="memory"; }
   S.loaded=true; saveState(); render();
   if(sb){ try{ const r=await sb.auth.getSession(); await setUser(r.data.session?r.data.session.user:null); }catch(e){} sb.auth.onAuthStateChange((ev,ses)=>{ setTimeout(()=>setUser(ses?ses.user:null),0); }); }
+}
+
+/* ---- quick scan and ownership checker ---- */
+let qsStream=null, qsT=0, qsLast="", qsLastAt=0, qsBusy=false;
+const qsMode=()=>(document.querySelector('input[name="qsm"]:checked')||{}).value||"add";
+function qsModeView(){ $("qs-opts").hidden=qsMode()!=="add"; $("qs-go").textContent=qsMode()==="add"?"Add":"Check"; }
+function qsOpen(){
+  $("qs-cat").innerHTML=Object.entries(CATS).map(([k,c])=>`<option value="${k}"${k===(S.cat==="all"?"media":S.cat)?" selected":""}>${c.label}</option>`).join("");
+  $("loc-list").innerHTML=locs(S.items).map(x=>`<option value="${esc(x)}">`).join("");
+  $("qs-log").innerHTML=""; $("qs-big").hidden=true; $("qs-code").value=""; qsModeView(); $("qs").showModal();
+}
+function qsNote(m,cls){ const b=$("qs-big"); b.hidden=false; b.className="qsbig"+(cls?" "+cls:""); b.innerHTML=m; }
+function qsLog(m){ const li=document.createElement("li"); li.innerHTML=m; $("qs-log").prepend(li); }
+async function qsStart(){
+  if(qsStream){ qsStop(); return; }
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ qsNote("This browser can't open the camera here. Type the barcode instead."); return; }
+  if(!("BarcodeDetector" in window)&&!window.ZXing){ qsNote("The scanner couldn't load. Type the barcode instead."); return; }
+  try{ qsStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280}},audio:false}); }
+  catch(e){ qsNote(e&&e.name==="NotAllowedError"?"Camera access is blocked. Allow the camera for this site, or type the barcode.":"No camera was found. Type the barcode instead."); return; }
+  const v=$("qs-video"); v.srcObject=qsStream; v.hidden=false; await v.play().catch(()=>{}); $("qs-start").textContent="Stop camera";
+  qsNote("Point the camera at a barcode. Keep going: each new barcode is handled as it's read.");
+  const det="BarcodeDetector" in window?new BarcodeDetector():null, zx=det?null:new ZXing.BrowserMultiFormatReader(); let busy=false;
+  qsT=setInterval(async()=>{ if(busy||qsBusy||v.readyState<2||!v.videoWidth) return; busy=true; let code="";
+    try{ if(det){ const r=await det.detect(v); const h=r.find(x=>/^\d{8,14}$/.test(x.rawValue)); if(h) code=h.rawValue; } else code=zx.decode(v).getText(); }catch(e){}
+    busy=false; if(/^\d{8,14}$/.test(code)) qsHandle(code); },250);
+}
+function qsStop(){ clearInterval(qsT); qsT=0; if(qsStream){ qsStream.getTracks().forEach(t=>t.stop()); qsStream=null; } const v=$("qs-video"); v.srcObject=null; v.hidden=true; $("qs-start").textContent="Start camera"; }
+async function lookupData(code){ let hit=await catByCode(code); if(!hit&&isISBN(code)) hit=await lookBook(code); if(!hit){ const r=await Promise.all([lookMusic(code),lookProduct(code)]); hit=r[0]||r[1]; } return hit; }
+async function qsHandle(raw,manual){
+  const code=String(raw).replace(/[^0-9Xx]/g,""); if(code.length<8){ qsNote("Enter the full barcode number."); return; }
+  const now=Date.now(); if(!manual&&code===qsLast&&now-qsLastAt<4000) return; qsLast=code; qsLastAt=now;
+  if(qsBusy) return; qsBusy=true;
+  try{
+    const owned=S.items.filter(i=>digits(i.barcode)===digits(code)&&i.status!=="sold"), have=owned.find(i=>i.status!=="wishlist"), wish=owned.find(i=>i.status==="wishlist");
+    if(qsMode()==="check"){
+      if(have){ qsNote(`<b>Yes, you own this.</b> ${owned.filter(i=>i.status!=="wishlist").map(i=>esc(i.name)+(i.location?" (kept: "+esc(i.location)+")":"")).join("; ")}`,"yes"); qsLog("Owned: "+esc(have.name)); return; }
+      qsNote("Checking "+esc(code)+".");
+      const hit=await lookupData(code);
+      qsNote(`<b>Not in your collection.</b> ${hit?esc(hit.name):"Barcode "+esc(code)+", no title found"}${wish?". It's on your wishlist.":""}`,"no"); qsLog("Not owned: "+esc(hit?hit.name:code)); return;
+    }
+    if(have){ qsNote(`<b>Already in your collection:</b> ${esc(have.name)}. Not added again.`,"no"); qsLog("Skipped duplicate: "+esc(have.name)); return; }
+    if(wish){ await saveItem({...wish,status:"owned",location:normLoc($("qs-loc").value)||wish.location||""},wish.id); qsNote(`<b>Moved from your wishlist:</b> ${esc(wish.name)}`,"yes"); qsLog("Moved from wishlist: "+esc(wish.name)); return; }
+    qsNote("Looking up "+esc(code)+".");
+    const hit=await lookupData(code), cat=hit&&CATS[hit.cat]?hit.cat:$("qs-cat").value, c=CATS[cat];
+    const data={name:hit?String(hit.name).slice(0,200):"Unknown item "+code,cat,type:hit&&c.types.includes(hit.type)?hit.type:c.types[0],maker:hit?String(hit.maker||"").slice(0,120):"",detail:hit?String(hit.detail||"").slice(0,120):"",condition:"",barcode:code,paid:null,value:null,status:"owned",notes:"",location:normLoc($("qs-loc").value),photo:hit&&hit.image?okImg(hit.image):"",tags:[]};
+    await saveItem(data,null);
+    qsNote(`<b>Added:</b> ${esc(data.name)}${hit?"":". No title was found, so edit it later."}`,"yes"); qsLog("Added: "+esc(data.name)+(hit?"":" (needs a name)"));
+  }catch(e){ qsNote("That barcode couldn't be saved. Try again."); }
+  finally{ qsBusy=false; }
 }
 
 /* ---- accounts, sync, public showcase ---- */
@@ -755,7 +1036,7 @@ $("delete-btn").onclick=async()=>{
   try{ await removeItem(editing.id); $("dlg").close(); toast("Deleted."); }catch(e){ toast("Couldn't delete. Try again."); }
 };
 $("item-form").addEventListener("submit",async e=>{
-  e.preventDefault(); const f=formItem(); if(!f.name){ toast("Give the item a name."); $("f-name").focus(); return; }
+  e.preventDefault(); const f=formItem(); if(f.status==="sold"&&!f.soldDate) f.soldDate=dayOf(Date.now()); if(f.lentTo&&!f.lentDate) f.lentDate=dayOf(Date.now()); if(!f.name){ toast("Give the item a name."); $("f-name").focus(); return; }
   const b=$("save-btn"); b.disabled=true;
   try{ await saveItem(f,editing?editing.id:null); $("dlg").close(); toast(editing?"Saved.":"Added to your collection."); }
   catch(err){ toast("Couldn't save. This device may be out of storage space."); }
@@ -771,17 +1052,33 @@ $("import-file").onchange=async e=>{
   try{
     const j=JSON.parse(await f.text()); const list=(Array.isArray(j)?j:j.items||[]).filter(i=>i&&typeof i.name==="string"&&i.name&&CATS[i.cat]);
     if(!list.length){ toast("That file has no Cubby items in it."); return; }
-    let n=0; for(const raw of list){ const {id,example,...d}=raw; const known=S.items.some(i=>i.id===id); await saveItem({...d,photo:okImg(d.photo)},known?id:null); n++; }
+    let n=0; S.quiet=true; try{ for(const raw of list){ const {id,example,...d}=raw; const known=S.items.some(i=>i.id===id); await saveItem({...d,photo:okImg(d.photo)},known?id:null); n++; } }finally{ S.quiet=false; render(); }
     toast("Imported "+n+" item"+(n===1?"":"s")+".");
   }catch(err){ toast("That file couldn't be read. Choose a Cubby backup file."); }
 };
 $("main").addEventListener("click",e=>{
-  const card=e.target.closest(".card"); if(card){ const it=shown().find(i=>i.id===card.dataset.id); if(it) openItem(it); return; }
+  const op=e.target.closest("[data-open]"); if(op){ const it=S.items.find(i=>i.id===op.dataset.open); if(it) openItem(it); return; }
+  const card=e.target.closest(".card");
+  if(card&&S.sel&&view()==="collection"){ const id=card.dataset.id; if(S.sel.has(id)) S.sel.delete(id); else S.sel.add(id); document.querySelectorAll('.card[data-id="'+CSS.escape(id)+'"]').forEach(c=>{ c.classList.toggle("picked",S.sel.has(id)); c.setAttribute("aria-pressed",S.sel.has(id)); }); const bc=$("bk-count"); if(bc) bc.textContent=S.sel.size+" selected"; return; }
+  if(card){ const it=shown().find(i=>i.id===card.dataset.id); if(it) openItem(it); return; }
+  const chip=e.target.closest("[data-tag]"); if(chip){ S.tag=chip.dataset.tag; render(); return; }
+  const bk=e.target.closest("[data-bulk]"); if(bk){ bulk(bk.dataset.bulk,bk); return; }
+  if(e.target.id==="sel-btn"){ S.sel=S.sel?null:new Set(); render(); return; }
+  if(e.target.id==="csv-btn"){ exportCSV(); return; }
+  if(e.target.id==="print-btn"){ window.print(); return; }
   const tab=e.target.closest(".tab"); if(tab){ S.cat=tab.dataset.cat; render(); return; }
   if(e.target.id==="copy-list"){ const mine=shown().filter(i=>i.status==="owned"||i.status==="forsale"); copy(mine.map(i=>"• "+[i.maker,i.name,i.detail].filter(Boolean).join(", ")).join("\n")); }
 });
 $("main").addEventListener("input",e=>{ if(e.target.id==="search"){ S.q=e.target.value; const g=$("grid"); if(g) g.innerHTML=gridHTML(filtered(shown())); } });
-$("main").addEventListener("change",e=>{ if(e.target.id==="status-sel"){ S.status=e.target.value; render(); } if(e.target.id==="loc-sel"){ S.loc=e.target.value; render(); } if(e.target.id==="sort-sel"){ S.sort=e.target.value; render(); } });
+$("main").addEventListener("change",e=>{ if(e.target.id==="status-sel"){ S.status=e.target.value; render(); } if(e.target.id==="loc-sel"){ S.loc=e.target.value; render(); } if(e.target.id==="sort-sel"){ S.sort=e.target.value; render(); } if(e.target.id==="group-sel"){ S.group=e.target.value; render(); } });
+$("qs-btn").onclick=qsOpen;
+$("qs-close").onclick=()=>$("qs").close();
+$("qs").addEventListener("close",qsStop);
+$("qs-start").onclick=qsStart;
+$("qs-go").onclick=()=>qsHandle($("qs-code").value,true);
+$("qs-code").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); qsHandle($("qs-code").value,true); } });
+document.querySelectorAll('input[name="qsm"]').forEach(r=>r.addEventListener("change",qsModeView));
+$("csv-foot").onclick=exportCSV;
 window.addEventListener("hashchange",render);
 boot();
 </script>
