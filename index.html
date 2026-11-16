@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cubby Collection Tracker</title>
+<meta name="theme-color" content="#000080">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="description" content="Catalog your clothes, sneakers, media, cards and art. Scan barcodes, track value, and spot duplicates.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -276,6 +280,9 @@ dialog{background:#C0C0C0;color:#000;border:2px solid;border-color:#fff #000 #00
 #qs-video[hidden]{display:none}
 .qsbig{padding:10px;border:1px solid #000;background:#FFFFCC;color:#000;font-size:15px}
 .qsbig.yes{background:#CCFFCC}.qsbig.no{background:#FFCCCC}
+.like{background:#C0C0C0;color:#C00000;border:2px solid;border-color:#fff #000 #000 #fff;padding:1px 8px;font-weight:700;cursor:pointer;border-radius:0}
+.like[aria-pressed="true"]{border-color:#000 #fff #fff #000;background:#FFCCCC}
+.card.still .row{justify-content:space-between}
 .qslog{margin:0;padding-left:20px;max-height:180px;overflow:auto;font-size:13px}
 @media print{
   header,.stripes,.foot,.noprint,#toast,dialog{display:none!important}
@@ -294,15 +301,19 @@ dialog{background:#C0C0C0;color:#000;border:2px solid;border-color:#fff #000 #00
       <a href="#series" id="nav-series">Series</a>
       <a href="#stats" id="nav-stats">Stats</a>
       <a href="#showcase" id="nav-showcase">Showcase</a>
+      <a href="#explore" id="nav-explore">Explore</a>
     </nav>
     <button class="btn" id="acct-btn" type="button">Sign in</button>
     <button class="btn" id="qs-btn" type="button">Quick scan</button>
     <button class="btn primary" id="add-btn" type="button">Add item</button>
   </header>
   <div class="stripes" aria-hidden="true"></div>
+  <div class="note" id="offline" hidden>You are offline. Your collection still works on this device; lookups and syncing resume when you reconnect.</div>
   <main id="main"></main>
   <div class="foot">
     <span id="save-state">Loading your collection.</span>
+    <button class="btn" type="button" id="install-btn" hidden>Install app</button>
+    <span class="hint" id="ios-tip" hidden>To install on iPhone or iPad, tap Share, then Add to Home Screen.</span>
     <button class="btn" type="button" id="csv-foot">Export spreadsheet</button>
     <button class="btn" type="button" id="export-btn">Export backup</button>
     <label class="btn" for="import-file">Import backup</label>
@@ -552,7 +563,7 @@ function shown(){ return S.items; }
 function initials(it){ return esc(tokens(it.name).slice(0,2).map(t=>t[0].toUpperCase()).join("")||"?"); }
 function tile(it){ return `<div class="ph ${esc(it.cat)}">${it.photo?`<img src="${esc(it.photo)}" alt="">`:`<span class="ini">${initials(it)}</span>`}${it.example?'<span class="ex">Example</span>':""}</div>`; }
 
-const VIEWS={"#showcase":"showcase","#series":"series","#stats":"stats","#report":"report"};
+const VIEWS={"#explore":"explore","#showcase":"showcase","#series":"series","#stats":"stats","#report":"report"};
 function view(){ return location.hash.startsWith("#u-")?"public":VIEWS[location.hash]||"collection"; }
 function render(){
   const v=view(); document.querySelectorAll("nav a").forEach(a=>a.removeAttribute("aria-current")); document.body.classList.toggle("is-report",v==="report");
@@ -560,7 +571,8 @@ function render(){
   const nv=$("nav-"+(v==="report"?"stats":v)); if(nv) nv.setAttribute("aria-current","page");
   const all=shown();
   if(!S.loaded){ $("main").innerHTML=`<div class="note">${S.slow?"Your saved collection can't be reached yet. Still trying.":"Loading your collection."}</div>`; return; }
-  $("main").innerHTML = v==="showcase" ? showcaseHTML(all) : v==="series" ? seriesHTML(all) : v==="stats" ? statsHTML(all) : v==="report" ? reportHTML(all) : collectionHTML(all);
+  $("main").innerHTML = v==="showcase" ? showcaseHTML(all) : v==="series" ? seriesHTML(all) : v==="stats" ? statsHTML(all) : v==="report" ? reportHTML(all) : v==="explore" ? exploreHTML() : collectionHTML(all);
+  if(v==="explore") loadSocial();
   if(v==="collection") $("loc-list").innerHTML=locs(S.items).map(x=>`<option value="${esc(x)}">`).join("");
   const q=$("search"); if(q){ q.value=S.q; }
 }
@@ -971,10 +983,11 @@ function setUser(u){
 }
 function renderPublic(){
   const uname=decodeURIComponent(location.hash.slice(3)).toLowerCase().replace(/[^a-z0-9_-]/g,"").slice(0,20);
-  if(!pub||pub.uname!==uname){ pub={uname,items:null,err:""}; loadPublic(uname); }
-  const list=pub.items||[];
-  $("main").innerHTML=`<div class="showhead"><div style="margin-right:auto"><h1>${esc(uname)}'s collection</h1><p>${pub.items?list.length+" piece"+(list.length===1?"":"s")+" on show":esc(pub.err||"Loading.")}</p></div><a class="btn" href="#collection">Open my Cubby</a></div>
-  <div class="grid show">${list.map(it=>`<div class="card still">${tile(it)}<div class="meta"><div class="nm">${esc(it.name)}</div><div class="sub">${esc([it.maker,it.detail].filter(Boolean).join(" · "))}</div>${it.status==="forsale"?'<div class="row"><span></span><span class="pill forsale">For sale</span></div>':""}</div></div>`).join("")}</div>`;
+  if(!pub||pub.uname!==uname){ pub={uname,items:null,err:"",following:false}; loadPublic(uname); }
+  const list=pub.items||[], mine=profile&&profile.username===uname;
+  $("main").innerHTML=`<div class="showhead"><div style="margin-right:auto"><h1>${esc(uname)}'s collection</h1><p>${pub.items?list.length+" piece"+(list.length===1?"":"s")+" on show":esc(pub.err||"Loading.")}</p></div>${me&&pub.items&&!mine?`<button class="btn${pub.following?"":" primary"}" type="button" id="follow-btn" aria-pressed="${pub.following}">${pub.following?"Following":"Follow"}</button>`:""}<a class="btn" href="#explore">Explore</a><a class="btn" href="#collection">Open my Cubby</a></div>
+  ${pub.items&&!me?'<p class="hint">Sign in to follow this collector and like items.</p>':""}
+  <div class="grid show">${list.map(it=>`<div class="card still">${tile(it)}<div class="meta"><div class="nm">${esc(it.name)}</div><div class="sub">${esc([it.maker,it.detail].filter(Boolean).join(" · "))}</div><div class="row"><button class="like" type="button" data-like="${esc(it.id)}" aria-pressed="${!!it.liked}" aria-label="${it.liked?"Unlike":"Like"}, ${it.likes} like${it.likes===1?"":"s"}">${it.liked?"♥":"♡"} ${it.likes}</button>${it.status==="forsale"?'<span class="pill forsale">For sale</span>':""}</div></div></div>`).join("")}</div>`;
 }
 async function loadPublic(uname){
   let data=null, error=null;
@@ -982,8 +995,46 @@ async function loadPublic(uname){
   if(!pub||pub.uname!==uname) return;
   if(error||!Array.isArray(data)) pub.err="This showcase can't be loaded right now.";
   else if(!data.length) pub.err="Nothing to see. This showcase is private or empty.";
-  else pub.items=data.map(r=>({name:String(r.name||""),cat:CATS[r.cat]?r.cat:"closet",maker:r.maker||"",detail:r.detail||"",status:r.status,photo:okImg(r.photo)}));
+  else pub.items=data.map(r=>({id:String(r.id||""),name:String(r.name||""),cat:CATS[r.cat]?r.cat:"closet",maker:r.maker||"",detail:r.detail||"",status:r.status,photo:okImg(r.photo),likes:Number(r.likes)||0,liked:!!r.liked}));
+  if(me&&pub.items){ try{ const f=await sb.rpc("is_following",{uname}); if(pub&&pub.uname===uname) pub.following=!!f.data; }catch(e){} }
   if(view()==="public") render();
+}
+async function toggleLike(id){
+  if(!me){ toast("Sign in to like items."); return; }
+  const it=pub&&pub.items&&pub.items.find(i=>i.id===id); if(!it||it.busy) return;
+  const on=!it.liked; it.busy=true; it.liked=on; it.likes=Math.max(0,it.likes+(on?1:-1)); render();
+  try{ const r=await sb.rpc("set_like",{uname:pub.uname,item:id,on_:on}); if(r.error) throw r.error; it.likes=Number(r.data)||0; }
+  catch(e){ it.liked=!on; it.likes=Math.max(0,it.likes+(on?-1:1)); toast("Couldn't save your like. Try again."); }
+  it.busy=false; if(view()==="public") render();
+}
+async function toggleFollow(){
+  if(!me||!pub) return; const on=!pub.following;
+  try{ const r=await sb.rpc("set_follow",{uname:pub.uname,on_:on}); if(r.error) throw r.error; pub.following=on; SOC.at=0; toast(on?"Following "+pub.uname+".":"Unfollowed "+pub.uname+"."); }
+  catch(e){ toast("Couldn't update. Try again."); }
+  if(view()==="public") render();
+}
+const SOC={at:0,busy:false,matches:null,follows:null,explore:null,err:""};
+async function loadSocial(force){
+  if(!sb||SOC.busy) return; if(!force&&SOC.at&&Date.now()-SOC.at<60000) return;
+  SOC.busy=true; SOC.err="";
+  try{
+    const ex=await sb.rpc("explore"); SOC.explore=ex.error?[]:(ex.data||[]); if(ex.error) SOC.err="Explore couldn't load right now.";
+    if(me){ const [f,m]=await Promise.all([sb.rpc("my_follows"),sb.rpc("wishlist_matches")]); SOC.follows=f.error?[]:(f.data||[]); SOC.matches=m.error?[]:(m.data||[]); }
+    else { SOC.follows=null; SOC.matches=null; }
+  }catch(e){ SOC.err="Explore couldn't load right now."; }
+  SOC.at=Date.now(); SOC.busy=false; if(view()==="explore") render();
+}
+function ago(ms){ const d=Math.floor((Date.now()-Number(ms))/864e5); return !ms?"":d<1?"today":d===1?"yesterday":d+" days ago"; }
+function exploreHTML(){
+  const who=u=>`<a href="#u-${encodeURIComponent(u)}">${esc(u)}</a>`, load='<p class="hint">Loading.</p>';
+  if(!sb) return `<div class="showhead"><div><h1>Explore</h1></div></div><div class="note">Explore needs a connection. Check your internet and reload.</div>`;
+  return `<div class="showhead"><div style="margin-right:auto"><h1>Explore</h1><p>Public showcases from other collectors.</p></div><button class="btn" type="button" id="soc-refresh">Refresh</button></div>
+  ${!me?'<div class="note">Sign in to follow collectors, like items, and see when someone is selling something on your wishlist.</div>':""}
+  <div class="panels">
+  ${me?`<section class="panel wide"><h3>For sale from your wishlist</h3>${SOC.matches==null?load:SOC.matches.length?`<ul>${SOC.matches.map(m=>`<li><b>${esc(m.name)}</b>${m.detail?" ("+esc(m.detail)+")":""} is for sale by ${who(m.username)}. It matches "${esc(m.wish)}" on your wishlist.</li>`).join("")}</ul>`:'<p class="hint">Nothing yet. Save items with the Wishlist status and Cubby checks public showcases for sellers by barcode and name.</p>'}</section>
+  <section class="panel"><h3>Collectors you follow</h3>${SOC.follows==null?load:SOC.follows.length?`<ul>${SOC.follows.map(f=>`<li>${who(f.username)}: ${Number(f.items)||0} items${f.latest?", updated "+ago(f.latest):""}</li>`).join("")}</ul>`:'<p class="hint">You don\'t follow anyone yet. Open a showcase and press Follow.</p>'}</section>`:""}
+  <section class="panel"><h3>Recently updated showcases</h3>${SOC.explore==null?load:SOC.explore.length?`<ul>${SOC.explore.map(f=>`<li>${who(f.username)}: ${Number(f.items)||0} items, updated ${ago(f.latest)}</li>`).join("")}</ul>`:'<p class="hint">No public showcases yet. Make yours public from Account.</p>'}</section>
+  </div>${SOC.err?`<p class="hint">${esc(SOC.err)}</p>`:""}`;
 }
 function showLink(){ return profile&&profile.username&&profile.showcase?location.origin+location.pathname+"#u-"+profile.username:""; }
 function linkView(){ const l=showLink(); $("a-link").textContent=l?"Your public link: "+l:"Your showcase is private."; $("copylink-btn").hidden=!l; }
@@ -1057,6 +1108,9 @@ $("import-file").onchange=async e=>{
   }catch(err){ toast("That file couldn't be read. Choose a Cubby backup file."); }
 };
 $("main").addEventListener("click",e=>{
+  const lk=e.target.closest("[data-like]"); if(lk){ toggleLike(lk.dataset.like); return; }
+  if(e.target.id==="follow-btn"){ toggleFollow(); return; }
+  if(e.target.id==="soc-refresh"){ loadSocial(true); return; }
   const op=e.target.closest("[data-open]"); if(op){ const it=S.items.find(i=>i.id===op.dataset.open); if(it) openItem(it); return; }
   const card=e.target.closest(".card");
   if(card&&S.sel&&view()==="collection"){ const id=card.dataset.id; if(S.sel.has(id)) S.sel.delete(id); else S.sel.add(id); document.querySelectorAll('.card[data-id="'+CSS.escape(id)+'"]').forEach(c=>{ c.classList.toggle("picked",S.sel.has(id)); c.setAttribute("aria-pressed",S.sel.has(id)); }); const bc=$("bk-count"); if(bc) bc.textContent=S.sel.size+" selected"; return; }
@@ -1080,6 +1134,16 @@ $("qs-code").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefau
 document.querySelectorAll('input[name="qsm"]').forEach(r=>r.addEventListener("change",qsModeView));
 $("csv-foot").onclick=exportCSV;
 window.addEventListener("hashchange",render);
+/* ---- installable app ---- */
+let installEvt=null;
+if("serviceWorker" in navigator&&location.protocol==="https:") navigator.serviceWorker.register("sw.js").catch(()=>{});
+window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); installEvt=e; $("install-btn").hidden=false; });
+window.addEventListener("appinstalled",()=>{ installEvt=null; $("install-btn").hidden=true; toast("Cubby is installed."); });
+$("install-btn").onclick=async()=>{ if(!installEvt) return; installEvt.prompt(); try{ await installEvt.userChoice; }catch(e){} installEvt=null; $("install-btn").hidden=true; };
+(function(){ const ios=/iphone|ipad|ipod/i.test(navigator.userAgent), standalone=window.navigator.standalone||matchMedia("(display-mode: standalone)").matches; if(ios&&!standalone) $("ios-tip").hidden=false; })();
+window.addEventListener("online",()=>{ $("offline").hidden=true; });
+window.addEventListener("offline",()=>{ $("offline").hidden=false; });
+if(!navigator.onLine) $("offline").hidden=false;
 boot();
 </script>
 </body>
