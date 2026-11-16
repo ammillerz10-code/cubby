@@ -151,10 +151,80 @@ dialog::backdrop{background:rgba(10,14,25,.55)}
 .card.still{cursor:default}
 .card.still:hover{transform:none;box-shadow:4px 4px 0 var(--shadow)}
 #a-link{overflow-wrap:anywhere}
+.fg .results{grid-column:1/-1;display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto;border:2px solid var(--line);border-radius:10px;padding:8px}
+.fg .results[hidden]{display:none}
+.res{display:flex;gap:10px;align-items:center;text-align:left;background:transparent;border:0;border-radius:8px;padding:6px;cursor:pointer}
+.res:hover{background:var(--bg)}
+.res img,.res .noimg{width:44px;height:60px;object-fit:cover;border:2px solid var(--line);border-radius:6px;flex:none;background:var(--bg)}
+.res span{display:flex;flex-direction:column;min-width:0}
+.res small{color:var(--muted);font-size:12px}
 .bc{display:flex;gap:8px}.bc .field{flex:1}
 #scanner{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
 #scanner[hidden]{display:none}
 #scan-video{width:100%;max-height:280px;object-fit:cover;background:#000;border:2px solid var(--line);border-radius:10px}
+
+/* og internet treatment: a grey desktop window on a teal background, bevelled buttons, blue underlined links */
+:root:root:root{
+  --bg:#008080; --surface:#C0C0C0; --ink:#000000; --muted:#404040; --line:#000000; --shadow:transparent; --accent:#000080; --accent-ink:#FFFFFF;
+  --c1:#000080; --c2:#1084D0; --c3:#C0C0C0; --hero:#000000;
+  --sale:#804000; --sale-bg:#FFFF99; --sold:#006000; --sold-bg:#CCFFCC; --wish:#600080; --wish-bg:#EED5FF; --bad:#C00000;
+  --t-closet:#99CCCC; --t-media:#FFCC99; --t-cards:#FFFF99; --t-art:#FFCCFF; --t-figures:#CCCCFF; --tile-ink:#000080;
+  --display:"Times New Roman",Times,serif; --body:Tahoma,"MS Sans Serif",Geneva,Verdana,sans-serif; --r:0px;
+  color-scheme:light;
+}
+body{font-size:14px}
+a{color:#0000EE}
+:focus-visible{outline:1px dotted #000;outline-offset:-4px}
+.wrap{max-width:980px;background:var(--surface);margin:16px auto;padding:0 12px 20px;border:2px solid;border-color:#fff #000 #000 #fff;box-shadow:inset -1px -1px 0 #808080,inset 1px 1px 0 #dfdfdf}
+header{background:linear-gradient(90deg,#000080,#1084d0);margin:0 -12px 12px;padding:4px 6px;gap:6px}
+.brand{font-family:var(--body);font-weight:700;font-size:15px;line-height:1.4;color:#fff}
+.brand span{color:#fff}
+.brand::after{content:" - My Collection Home Page"}
+nav{background:transparent;border:0;box-shadow:none;border-radius:0;padding:0;gap:6px}
+.btn,nav a,.tab{border-radius:0;background:#C0C0C0;color:#000;border:2px solid;border-color:#fff #000 #000 #fff;box-shadow:inset -1px -1px 0 #808080,inset 1px 1px 0 #dfdfdf;padding:4px 12px;font-weight:400;transition:none;text-decoration:none;letter-spacing:0}
+.btn:hover,.btn.primary:hover{border-color:#fff #000 #000 #fff;filter:none}
+.btn.primary{background:#C0C0C0;color:#000;font-weight:700}
+.btn.danger{color:#C00000}
+.btn:active,.tab[aria-pressed="true"],nav a[aria-current="page"]{background:#C0C0C0;color:#000;border-color:#000 #fff #fff #000;box-shadow:inset 1px 1px 0 #808080;transform:none}
+.tab[aria-pressed="true"],nav a[aria-current="page"]{font-weight:700}
+.tab[aria-pressed="true"] b{opacity:1}
+.stripes{height:0;border:0;border-top:2px solid #808080;border-bottom:2px solid #fff;border-radius:0;background:none;margin-bottom:12px}
+.stat,.card,dialog,.note,.match{border-radius:0;box-shadow:none}
+.stat{background:#C0C0C0;border:2px solid;border-color:#808080 #fff #fff #808080;padding:10px 12px}
+.stat .k{letter-spacing:0;text-transform:none;font-size:12px;font-weight:400}
+.stat .v{font-family:"Courier New",Courier,monospace;font-weight:700;font-size:22px}
+.stat.big{background:#000}
+.stat.big .k,.stat.big .s{color:#00FF00;font-family:"Courier New",Courier,monospace}
+.stat.big .v{color:#00FF00;font-size:40px;letter-spacing:.04em}
+.field,select.field{border-radius:0;background:#fff;color:#000;border:2px solid;border-color:#808080 #fff #fff #808080;box-shadow:inset 1px 1px 0 #000;padding:4px 6px}
+.note,.match{background:#FFFFCC;border:1px solid #000;color:#000}
+.match strong{color:#C00000}
+.card{background:#C0C0C0;border:2px solid;border-color:#fff #000 #000 #fff;box-shadow:inset -1px -1px 0 #808080;padding:6px;transition:none}
+.card:hover,.card.still:hover{transform:none;box-shadow:inset -1px -1px 0 #808080;border-color:#fff #000 #000 #fff}
+.ph,.photo .ph{border:2px solid;border-color:#808080 #fff #fff #808080;border-radius:0}
+.ph .ini{font-style:italic;font-weight:700;opacity:1;font-size:46px}
+.meta{padding:6px 2px 2px}
+.nm{color:#0000EE;text-decoration:underline;font-weight:400;font-family:var(--display);font-size:16px}
+.card:active .nm{color:#EE0000}
+.pill{border:0;border-radius:0;padding:0 3px;font-size:11px;text-transform:none;letter-spacing:0;font-weight:700}
+.hint,.sub,.stat .s,.foot,.res small,.showhead p{color:#404040}
+.sub.loc{color:#000}
+.showhead h1{font-weight:700;font-size:34px}
+dialog{background:#C0C0C0;color:#000;border:2px solid;border-color:#fff #000 #000 #fff;box-shadow:inset -1px -1px 0 #808080,4px 4px 0 rgba(0,0,0,.4)}
+.dhead{background:linear-gradient(90deg,#000080,#1084d0);border-bottom:0;padding:4px 6px}
+.dhead h2{font-family:var(--body);font-weight:700;font-size:14px;color:#fff}
+.dhead .btn{padding:0 8px;font-weight:700}
+.dbody{padding:12px}
+.fg label{color:#000}
+#toast{background:#FFFFCC;color:#000;border:1px solid #000;border-radius:0;font-weight:400}
+.fg .results{border:2px solid;border-color:#808080 #fff #fff #808080;border-radius:0;background:#fff}
+.res{border-radius:0}
+.res:hover{background:#000080;color:#fff}
+.res:hover small{color:#fff}
+.res img,.res .noimg,#scan-video{border:1px solid #000;border-radius:0}
+.foot{border-top:2px solid #808080;padding-top:10px;margin-top:20px;font-size:12px}
+.foot::after{content:"Best viewed at 800 x 600.";flex-basis:100%;font-family:var(--display);font-style:italic;font-size:13px}
+@media (max-width:420px){.wrap{margin:8px;padding:0 8px 16px}header{margin:0 -8px 10px}}
 </style>
 </head>
 <body>
@@ -202,7 +272,8 @@ dialog::backdrop{background:rgba(10,14,25,.55)}
       </div>
       <div class="match" id="match" hidden></div>
       <div class="fg">
-        <label class="full">Name<input class="field" id="f-name" autocomplete="off" required></label>
+        <label class="full">Name<span class="bc"><input class="field" id="f-name" autocomplete="off" required><button class="btn" type="button" id="find-btn">Search</button></span></label>
+        <div class="results" id="results" hidden></div>
         <label>Collection<select class="field" id="f-cat"></select></label>
         <label>Type<select class="field" id="f-type"></select></label>
         <label><span id="l-maker">Brand</span><input class="field" id="f-maker" autocomplete="off"></label>
@@ -246,6 +317,7 @@ dialog::backdrop{background:rgba(10,14,25,.55)}
         <label class="full chk"><span><input type="checkbox" id="a-public"> Make my showcase public</span></label>
       </div>
       <p class="hint">A public showcase shows item names, makers, details and photos. Prices, notes and where things are kept stay private.</p>
+      <p class="hint">When you save an item that has a barcode, its name, maker and barcode are added to Cubby's shared catalog so lookups improve for everyone. Your own photos, prices, notes and locations are never shared.</p>
       <p class="hint" id="a-link"></p>
       <div class="dfoot"><button class="btn danger sp" type="button" id="signout-btn">Sign out</button><button class="btn" type="button" id="copylink-btn" hidden>Copy link</button><button class="btn primary" type="submit">Save</button></div>
     </form>
@@ -420,7 +492,7 @@ function openItem(it,scan){
   $("f-name").value=d.name||""; $("f-maker").value=d.maker||""; $("f-detail").value=d.detail||""; $("f-cond").value=d.condition||"";
   $("f-barcode").value=d.barcode||""; $("f-paid").value=d.paid??""; $("f-value").value=d.value??""; $("f-status").value=d.status||"owned"; $("f-notes").value=d.notes||""; $("f-loc").value=d.location||""; $("loc-list").innerHTML=locs(S.items).map(x=>`<option value="${esc(x)}">`).join("");
   photoData=d.photo||""; setPreview(); $("f-photo").value="";
-  $("listing").hidden=true; $("copy-btn").hidden=true; $("match").hidden=true; $("scanner").hidden=true;
+  $("listing").hidden=true; $("copy-btn").hidden=true; $("match").hidden=true; $("scanner").hidden=true; $("results").hidden=true;
   $("delete-btn").hidden=!editing; delArmed=false; $("delete-btn").textContent="Delete"; hint(HINT);
   $("dlg").showModal(); if(scan) startScan(); else if(!it) $("f-name").focus();
 }
@@ -473,7 +545,7 @@ async function getJSON(url){
 }
 async function lookBook(c){
   const j=await getJSON("https://openlibrary.org/api/books?bibkeys=ISBN:"+c+"&format=json&jscmd=data"); const d=j&&j["ISBN:"+c];
-  if(d&&d.title) return {name:d.title,maker:(d.authors||[]).map(a=>a.name).join(", "),cat:"media",type:"Books",source:"Open Library"};
+  if(d&&d.title) return {name:d.title,maker:(d.authors||[]).map(a=>a.name).join(", "),cat:"media",type:"Books",image:okImg(d.cover&&d.cover.medium),source:"Open Library"};
   const g=await getJSON("https://www.googleapis.com/books/v1/volumes?q=isbn:"+c); const v=g&&g.items&&g.items[0]&&g.items[0].volumeInfo;
   if(v&&v.title) return {name:v.title,maker:(v.authors||[]).join(", "),cat:"media",type:"Books",source:"Google Books"};
   return null;
@@ -495,7 +567,8 @@ async function lookup(code){
   const b=$("lookup-btn"); b.disabled=true; hint("Looking up "+code+".");
   let hit=null;
   try{
-    if(isISBN(code)) hit=await lookBook(code);
+    hit=await catByCode(code);
+    if(!hit&&isISBN(code)) hit=await lookBook(code);
     if(!hit){ const [m,u]=await Promise.all([lookMusic(code),lookProduct(code)]); hit=m||u; }
   }finally{ b.disabled=false; }
   if($("f-barcode").value.replace(/[^0-9Xx]/g,"")!==code) return;
@@ -504,12 +577,52 @@ async function lookup(code){
   $("f-name").value=String(hit.name).slice(0,200);
   if(hit.maker) $("f-maker").value=String(hit.maker).slice(0,120);
   if(hit.detail&&!$("f-detail").value) $("f-detail").value=String(hit.detail).slice(0,120);
+  if(hit.image&&!photoData){ photoData=hit.image; setPreview(); }
   hint("Found on "+hit.source+". Check the details before saving."); checkMatch();
 }
 function gotBarcode(code){
   $("f-barcode").value=code; const m=checkMatch();
   if(m.some(x=>x.why==="same barcode")){ hint("Barcode "+code+" is already in your collection."); return; }
   lookup(code);
+}
+
+/* ---- shared catalog and name search ---- */
+const CAT_COLS="code,cat,type,title,maker,detail,image,source";
+function okImg(u){ return typeof u==="string"&&(u.startsWith("data:image/")||/^https:\/\/[^\s"'<>]+$/.test(u))?u:""; }
+function catRow(d,src){ return {name:d.title,maker:d.maker||"",detail:d.detail||"",cat:d.cat,type:d.type,image:okImg(d.image),barcode:d.code||"",source:src}; }
+async function catByCode(c){ if(!sb) return null; try{ const r=await sb.from("catalog").select(CAT_COLS).eq("code",c).limit(1); return r.data&&r.data[0]?catRow(r.data[0],"the Cubby catalog"):null; }catch(e){ return null; } }
+async function catSearch(q){ if(!sb) return []; try{ const r=await sb.from("catalog").select(CAT_COLS).ilike("title","%"+q.replace(/[%_\\,()]/g," ")+"%").limit(6); return (r.data||[]).map(d=>catRow(d,"Cubby catalog")); }catch(e){ return []; } }
+async function srcBooks(q){ const j=await getJSON("https://openlibrary.org/search.json?q="+encodeURIComponent(q)+"&limit=6&fields=title,author_name,first_publish_year,cover_i"); return ((j&&j.docs)||[]).map(d=>({name:d.title,maker:(d.author_name||[]).slice(0,2).join(", "),detail:d.first_publish_year?String(d.first_publish_year):"",cat:"media",type:"Books",image:d.cover_i?"https://covers.openlibrary.org/b/id/"+d.cover_i+"-M.jpg":"",source:"Open Library"})); }
+async function srcMusic(q){ const j=await getJSON("https://itunes.apple.com/search?term="+encodeURIComponent(q)+"&entity=album&limit=6"); return ((j&&j.results)||[]).map(d=>({name:d.collectionName,maker:d.artistName||"",detail:d.releaseDate?d.releaseDate.slice(0,4):"",cat:"media",type:"Music",image:okImg(String(d.artworkUrl100||"").replace("100x100bb","400x400bb")),source:"iTunes"})); }
+async function srcMagic(q){ const j=await getJSON("https://api.scryfall.com/cards/search?unique=prints&q="+encodeURIComponent(q)); return ((j&&j.data)||[]).slice(0,8).map(d=>({name:d.name,maker:d.set_name||"",detail:"#"+d.collector_number,cat:"cards",type:"Magic",image:okImg(d.image_uris?d.image_uris.normal:d.card_faces&&d.card_faces[0].image_uris&&d.card_faces[0].image_uris.normal),source:"Scryfall"})); }
+async function srcPokemon(q){ const j=await getJSON("https://api.tcgdex.net/v2/en/cards?name="+encodeURIComponent(q)); return (Array.isArray(j)?j:[]).filter(d=>d.image).slice(0,8).map(d=>({name:d.name,maker:String(d.id).split("-")[0].toUpperCase(),detail:"#"+d.localId,cat:"cards",type:"Pokémon",image:okImg(d.image+"/low.webp"),more:"https://api.tcgdex.net/v2/en/cards/"+encodeURIComponent(d.id),source:"TCGdex"})); }
+let found=[];
+async function findByName(){
+  const q=$("f-name").value.trim(), box=$("results");
+  if(q.length<2){ hint("Type at least two letters of the name, then search."); return; }
+  const cat=$("f-cat").value, type=$("f-type").value, jobs=[catSearch(q)];
+  if(cat==="media"&&type==="Books") jobs.push(srcBooks(q));
+  if(cat==="media"&&type==="Music") jobs.push(srcMusic(q));
+  if(cat==="cards"&&type==="Magic") jobs.push(srcMagic(q));
+  if(cat==="cards"&&type==="Pokémon") jobs.push(srcPokemon(q));
+  const b=$("find-btn"); b.disabled=true; box.hidden=false; box.innerHTML='<p class="hint">Searching.</p>';
+  found=(await Promise.all(jobs.map(j=>j.catch(()=>[])))).flat().filter(r=>r&&r.name).slice(0,14); b.disabled=false;
+  box.innerHTML=found.length?found.map((r,i)=>`<button class="res" type="button" data-i="${i}">${r.image?`<img src="${esc(r.image)}" alt="" loading="lazy">`:'<span class="noimg"></span>'}<span><b>${esc(r.name)}</b><small>${esc([r.maker,r.detail].filter(Boolean).join(" · "))}</small><small>${esc(r.source)}</small></span></button>`).join(""):`<p class="hint">${jobs.length>1?"No matches. Check the spelling or type the details in.":"No matches in the Cubby catalog yet. Outside name search covers books, music, Magic cards and Pokémon cards: pick that collection and type, then search again."}</p>`;
+}
+async function pickResult(i){
+  const r=found[i]; if(!r) return; $("results").hidden=true;
+  if(CATS[r.cat]){ $("f-cat").value=r.cat; setCat(r.cat,r.type); }
+  $("f-name").value=String(r.name).slice(0,200); $("f-maker").value=String(r.maker||"").slice(0,120);
+  if(r.detail) $("f-detail").value=String(r.detail).slice(0,120);
+  if(r.barcode&&!$("f-barcode").value) $("f-barcode").value=r.barcode;
+  if(r.image&&!photoData.startsWith("data:")){ photoData=r.image; setPreview(); }
+  hint("Filled in from "+r.source+". Check the details before saving."); checkMatch();
+  if(r.more){ const j=await getJSON(r.more); if(j&&j.set&&j.set.name&&$("f-name").value===String(r.name)) $("f-maker").value=String(j.set.name).slice(0,120); }
+}
+function contribute(doc){
+  if(!sb||!me||!doc.barcode||!doc.name) return;
+  const img=/^https:\/\//.test(doc.photo||"")&&doc.photo.length<=400?doc.photo:null;
+  sb.from("catalog").insert({code:doc.barcode,cat:doc.cat,type:doc.type||null,title:doc.name.slice(0,200),maker:(doc.maker||"").slice(0,120),detail:(doc.detail||"").slice(0,120),image:img,source:"member"}).then(()=>{},()=>{});
 }
 
 /* ---- storage (on this device) ---- */
@@ -524,6 +637,7 @@ async function saveItem(data,id){
   if(idb) await tx("readwrite",s=>s.put(doc));
   if(prev) Object.assign(prev,doc); else S.items.push(doc); render();
   if(me) cloudPut(doc).catch(()=>toast("Saved on this device. Syncing failed and will retry when you reopen Cubby."));
+  contribute(doc);
 }
 async function removeItem(id){ if(idb) await tx("readwrite",s=>s.delete(id)); S.items=S.items.filter(i=>i.id!==id); render(); if(me) cloudDel(id).catch(()=>toast("Deleted on this device, but your account couldn't be reached.")); }
 async function boot(){
@@ -576,7 +690,7 @@ async function loadPublic(uname){
   if(!pub||pub.uname!==uname) return;
   if(error||!Array.isArray(data)) pub.err="This showcase can't be loaded right now.";
   else if(!data.length) pub.err="Nothing to see. This showcase is private or empty.";
-  else pub.items=data.map(r=>({name:String(r.name||""),cat:CATS[r.cat]?r.cat:"closet",maker:r.maker||"",detail:r.detail||"",status:r.status,photo:typeof r.photo==="string"&&r.photo.startsWith("data:image/")?r.photo:""}));
+  else pub.items=data.map(r=>({name:String(r.name||""),cat:CATS[r.cat]?r.cat:"closet",maker:r.maker||"",detail:r.detail||"",status:r.status,photo:okImg(r.photo)}));
   if(view()==="public") render();
 }
 function showLink(){ return profile&&profile.username&&profile.showcase?location.origin+location.pathname+"#u-"+profile.username:""; }
@@ -617,6 +731,8 @@ $("dlg").addEventListener("close",stopScan);
 $("scan-btn").onclick=()=>{ if(stream) stopScan(); else startScan(); };
 $("scan-stop").onclick=()=>{ stopScan(); hint(HINT); };
 $("lookup-btn").onclick=()=>lookup($("f-barcode").value);
+$("find-btn").onclick=findByName;
+$("results").addEventListener("click",e=>{ const b=e.target.closest(".res"); if(b) pickResult(+b.dataset.i); });
 $("f-cat").onchange=e=>setCat(e.target.value);
 $("f-photo").onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(f) loadPhoto(f); };
 let mt=0; ["f-name","f-barcode"].forEach(id=>$(id).addEventListener("input",()=>{ clearTimeout(mt); mt=setTimeout(checkMatch,250); }));
@@ -644,7 +760,7 @@ $("import-file").onchange=async e=>{
   try{
     const j=JSON.parse(await f.text()); const list=(Array.isArray(j)?j:j.items||[]).filter(i=>i&&typeof i.name==="string"&&i.name&&CATS[i.cat]);
     if(!list.length){ toast("That file has no Cubby items in it."); return; }
-    let n=0; for(const raw of list){ const {id,example,...d}=raw; const known=S.items.some(i=>i.id===id); await saveItem({...d,photo:typeof d.photo==="string"&&d.photo.startsWith("data:image/")?d.photo:""},known?id:null); n++; }
+    let n=0; for(const raw of list){ const {id,example,...d}=raw; const known=S.items.some(i=>i.id===id); await saveItem({...d,photo:okImg(d.photo)},known?id:null); n++; }
     toast("Imported "+n+" item"+(n===1?"":"s")+".");
   }catch(err){ toast("That file couldn't be read. Choose a Cubby backup file."); }
 };
