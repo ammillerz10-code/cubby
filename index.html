@@ -593,7 +593,17 @@ function catRow(d,src){ return {name:d.title,maker:d.maker||"",detail:d.detail||
 async function catByCode(c){ if(!sb) return null; try{ const r=await sb.from("catalog").select(CAT_COLS).eq("code",c).limit(1); return r.data&&r.data[0]?catRow(r.data[0],"the Cubby catalog"):null; }catch(e){ return null; } }
 async function catSearch(q){ if(!sb) return []; try{ const r=await sb.from("catalog").select(CAT_COLS).ilike("title","%"+q.replace(/[%_\\,()]/g," ")+"%").limit(6); return (r.data||[]).map(d=>catRow(d,"Cubby catalog")); }catch(e){ return []; } }
 async function srcBooks(q){ const j=await getJSON("https://openlibrary.org/search.json?q="+encodeURIComponent(q)+"&limit=6&fields=title,author_name,first_publish_year,cover_i"); return ((j&&j.docs)||[]).map(d=>({name:d.title,maker:(d.author_name||[]).slice(0,2).join(", "),detail:d.first_publish_year?String(d.first_publish_year):"",cat:"media",type:"Books",image:d.cover_i?"https://covers.openlibrary.org/b/id/"+d.cover_i+"-M.jpg":"",source:"Open Library"})); }
-async function srcMusic(q){ const j=await getJSON("https://itunes.apple.com/search?term="+encodeURIComponent(q)+"&entity=album&limit=6"); return ((j&&j.results)||[]).map(d=>({name:d.collectionName,maker:d.artistName||"",detail:d.releaseDate?d.releaseDate.slice(0,4):"",cat:"media",type:"Music",image:okImg(String(d.artworkUrl100||"").replace("100x100bb","400x400bb")),source:"iTunes"})); }
+async function srcMusic(q){
+  const u="https://musicbrainz.org/ws/2/release-group/?query="+encodeURIComponent(q)+"&fmt=json&limit=6"; let j=await getJSON(u);
+  if(!j){ await new Promise(r=>setTimeout(r,1300)); j=await getJSON(u); }
+  return ((j&&j["release-groups"])||[]).map(d=>({name:d.title,maker:d["artist-credit"]&&d["artist-credit"][0]&&d["artist-credit"][0].name||"",detail:[d["primary-type"],String(d["first-release-date"]||"").slice(0,4)].filter(Boolean).join(", "),cat:"media",type:"Music",image:"https://coverartarchive.org/release-group/"+d.id+"/front-250",source:"MusicBrainz"}));
+}
+const WD={Movies:/\b(film|movie|television series|tv series|miniseries|anime)\b/i,Games:/\b(video game|arcade game|game)\b/i,Comics:/\b(comic|comics|manga|graphic novel)\b/i};
+async function srcWiki(q,type){
+  const re=WD[type]; if(!re) return [];
+  const j=await getJSON("https://www.wikidata.org/w/api.php?action=wbsearchentities&search="+encodeURIComponent(q)+"&language=en&uselang=en&type=item&limit=20&format=json&origin=*");
+  return ((j&&j.search)||[]).filter(x=>x.label&&x.description&&re.test(x.description)).slice(0,8).map(x=>{ const d=x.description, y=(d.match(/\b(18|19|20)\d{2}\b/)||[""])[0], by=(d.match(/\b(?:directed by|developed by|by)\s+(.+)$/i)||["",""])[1]; return {name:x.label,maker:by.slice(0,120),detail:y,cat:"media",type,image:"",source:"Wikidata"}; });
+}
 async function srcMagic(q){ const j=await getJSON("https://api.scryfall.com/cards/search?unique=prints&q="+encodeURIComponent(q)); return ((j&&j.data)||[]).slice(0,8).map(d=>({name:d.name,maker:d.set_name||"",detail:"#"+d.collector_number,cat:"cards",type:"Magic",image:okImg(d.image_uris?d.image_uris.normal:d.card_faces&&d.card_faces[0].image_uris&&d.card_faces[0].image_uris.normal),source:"Scryfall"})); }
 async function srcPokemon(q){ const j=await getJSON("https://api.tcgdex.net/v2/en/cards?name="+encodeURIComponent(q)); return (Array.isArray(j)?j:[]).filter(d=>d.image).slice(0,8).map(d=>({name:d.name,maker:String(d.id).split("-")[0].toUpperCase(),detail:"#"+d.localId,cat:"cards",type:"Pokémon",image:okImg(d.image+"/low.webp"),more:"https://api.tcgdex.net/v2/en/cards/"+encodeURIComponent(d.id),source:"TCGdex"})); }
 let found=[];
@@ -603,11 +613,12 @@ async function findByName(){
   const cat=$("f-cat").value, type=$("f-type").value, jobs=[catSearch(q)];
   if(cat==="media"&&type==="Books") jobs.push(srcBooks(q));
   if(cat==="media"&&type==="Music") jobs.push(srcMusic(q));
+  if(cat==="media"&&WD[type]) jobs.push(srcWiki(q,type));
   if(cat==="cards"&&type==="Magic") jobs.push(srcMagic(q));
   if(cat==="cards"&&type==="Pokémon") jobs.push(srcPokemon(q));
   const b=$("find-btn"); b.disabled=true; box.hidden=false; box.innerHTML='<p class="hint">Searching.</p>';
   found=(await Promise.all(jobs.map(j=>j.catch(()=>[])))).flat().filter(r=>r&&r.name).slice(0,14); b.disabled=false;
-  box.innerHTML=found.length?found.map((r,i)=>`<button class="res" type="button" data-i="${i}">${r.image?`<img src="${esc(r.image)}" alt="" loading="lazy">`:'<span class="noimg"></span>'}<span><b>${esc(r.name)}</b><small>${esc([r.maker,r.detail].filter(Boolean).join(" · "))}</small><small>${esc(r.source)}</small></span></button>`).join(""):`<p class="hint">${jobs.length>1?"No matches. Check the spelling or type the details in.":"No matches in the Cubby catalog yet. Outside name search covers books, music, Magic cards and Pokémon cards: pick that collection and type, then search again."}</p>`;
+  box.innerHTML=found.length?found.map((r,i)=>`<button class="res" type="button" data-i="${i}">${r.image?`<img src="${esc(r.image)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="noimg"></span>'}<span><b>${esc(r.name)}</b><small>${esc([r.maker,r.detail].filter(Boolean).join(" · "))}</small><small>${esc(r.source)}</small></span></button>`).join(""):`<p class="hint">${jobs.length>1?"No matches. Check the spelling or type the details in.":"No matches in the Cubby catalog yet. Outside name search covers books, music, movies, games, comics, Magic cards and Pokémon cards: pick that collection and type, then search again."}</p>`;
 }
 async function pickResult(i){
   const r=found[i]; if(!r) return; $("results").hidden=true;
@@ -615,7 +626,7 @@ async function pickResult(i){
   $("f-name").value=String(r.name).slice(0,200); $("f-maker").value=String(r.maker||"").slice(0,120);
   if(r.detail) $("f-detail").value=String(r.detail).slice(0,120);
   if(r.barcode&&!$("f-barcode").value) $("f-barcode").value=r.barcode;
-  if(r.image&&!photoData.startsWith("data:")){ photoData=r.image; setPreview(); }
+  if(r.image&&!photoData.startsWith("data:")){ const im=new Image(); im.onload=()=>{ if($("f-name").value===String(r.name).slice(0,200)){ photoData=r.image; setPreview(); } }; im.src=r.image; }
   hint("Filled in from "+r.source+". Check the details before saving."); checkMatch();
   if(r.more){ const j=await getJSON(r.more); if(j&&j.set&&j.set.name&&$("f-name").value===String(r.name)) $("f-maker").value=String(j.set.name).slice(0,120); }
 }
