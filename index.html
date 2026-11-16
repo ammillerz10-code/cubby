@@ -14,7 +14,7 @@
   --bg:#F3E7CE; --surface:#FFF8E7; --ink:#2B1D14; --muted:#75604C; --line:#2B1D14; --shadow:#2B1D14; --accent:#DD4F26; --accent-ink:#FFF8E7;
   --c1:#DD4F26; --c2:#E9A820; --c3:#1F8A84; --hero:#F2C24B;
   --sale:#83470A; --sale-bg:#F7DFA8; --sold:#1D6746; --sold-bg:#CFE8D6; --wish:#6A3D7C; --wish-bg:#EBD3EE; --bad:#B3261E;
-  --t-closet:#BEE0DA; --t-media:#F5C2A4; --t-cards:#F3D889; --t-art:#E8BCCB; --tile-ink:#2B1D14;
+  --t-closet:#BEE0DA; --t-media:#F5C2A4; --t-cards:#F3D889; --t-art:#E8BCCB; --t-figures:#CDD3F3; --tile-ink:#2B1D14;
   --display:"Shrikhand","Cooper Black","Rockwell Extra Bold",Georgia,serif;
   --body:"Karla","Trebuchet MS","Segoe UI",system-ui,sans-serif;
   --r:10px;
@@ -24,7 +24,7 @@
     --bg:#1E1510; --surface:#2A1E17; --ink:#F4E9D2; --muted:#C2AC92; --line:#7A6250; --shadow:#000000; --accent:#F0683C; --accent-ink:#1E1510;
     --c1:#F0683C; --c2:#E9A820; --c3:#2A9D97; --hero:#5A3F12;
     --sale:#F2C063; --sale-bg:#4A3410; --sold:#8AD3AB; --sold-bg:#173526; --wish:#E0B0E8; --wish-bg:#3B2444; --bad:#FF8F7A;
-    --t-closet:#1F4A47; --t-media:#5C2E1B; --t-cards:#5A4512; --t-art:#4D2A3A; --tile-ink:#F4E9D2;
+    --t-closet:#1F4A47; --t-media:#5C2E1B; --t-cards:#5A4512; --t-art:#4D2A3A; --t-figures:#2A2F52; --tile-ink:#F4E9D2;
     color-scheme:dark;
   }
 }
@@ -32,7 +32,7 @@
   --bg:#1E1510; --surface:#2A1E17; --ink:#F4E9D2; --muted:#C2AC92; --line:#7A6250; --shadow:#000000; --accent:#F0683C; --accent-ink:#1E1510;
   --c1:#F0683C; --c2:#E9A820; --c3:#2A9D97; --hero:#5A3F12;
   --sale:#F2C063; --sale-bg:#4A3410; --sold:#8AD3AB; --sold-bg:#173526; --wish:#E0B0E8; --wish-bg:#3B2444; --bad:#FF8F7A;
-  --t-closet:#1F4A47; --t-media:#5C2E1B; --t-cards:#5A4512; --t-art:#4D2A3A; --tile-ink:#F4E9D2;
+  --t-closet:#1F4A47; --t-media:#5C2E1B; --t-cards:#5A4512; --t-art:#4D2A3A; --t-figures:#2A2F52; --tile-ink:#F4E9D2;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -74,7 +74,7 @@ nav a[aria-current="page"]{background:var(--ink);color:var(--bg)}
 .card{display:flex;flex-direction:column;text-align:left;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;min-width:0}
 .card:hover{border-color:var(--accent)}
 .ph{aspect-ratio:1/1;display:grid;place-items:center;position:relative;background:var(--t-closet);color:var(--tile-ink)}
-.ph.media{background:var(--t-media)} .ph.cards{background:var(--t-cards)} .ph.art{background:var(--t-art)}
+.ph.media{background:var(--t-media)} .ph.cards{background:var(--t-cards)} .ph.art{background:var(--t-art)} .ph.figures{background:var(--t-figures)}
 .ph img{width:100%;height:100%;object-fit:cover;display:block}
 .ph .ini{font-family:var(--display);font-weight:700;font-size:44px;letter-spacing:-.03em;opacity:.55}
 .ph .ex{position:absolute;top:8px;left:8px;background:var(--surface);color:var(--muted);border-radius:999px;font-size:11px;padding:2px 8px;font-weight:600}
@@ -262,7 +262,8 @@ const CATS = {
   closet:{label:"Closet", types:["Sneakers","Tops","Bottoms","Outerwear","Shoes","Accessories"], maker:"Brand", detail:"Size"},
   media:{label:"Media", types:["Movies","Books","Games","Comics","Music"], maker:"Author, artist or studio", detail:"Format or platform"},
   cards:{label:"Cards", types:["Pokémon","Sports","Magic","Yu-Gi-Oh!","Other"], maker:"Set", detail:"Card number or grade"},
-  art:{label:"Art", types:["Prints","Paintings","Photography","Sculpture","Posters","Other"], maker:"Artist", detail:"Size or edition"}
+  art:{label:"Art", types:["Prints","Paintings","Photography","Sculpture","Posters","Other"], maker:"Artist", detail:"Size or edition"},
+  figures:{label:"Figures", types:["Funko Pop","Action figures","Statues","Plush","Model kits","Other"], maker:"Brand or series", detail:"Number or edition"}
 };
 const STATUS = {owned:"In collection", forsale:"For sale", sold:"Sold", wishlist:"Wishlist"};
 const STOP = new Set(["the","a","an","of","and","in","for","edition","with"]);
@@ -307,10 +308,12 @@ function listingText(it){
 function isISBN(c){ return /^(978|979)\d{10}$/.test(c)||/^\d{9}[\dXx]$/.test(c); }
 function guessCat(category,title){
   const t=(String(category||"")+" "+String(title||"")).toLowerCase();
-  const has=(...w)=>w.some(x=>t.includes(x));
+  const has=(...w)=>w.some(x=>new RegExp("\\b"+x).test(t));
+  if(has("funko")) return {cat:"figures",type:"Funko Pop"};
   if(has("video game","nintendo","playstation","xbox")) return {cat:"media",type:"Games"};
+  if(has("action figure","figure","figurine","statue","plush","model kit")) return {cat:"figures",type:has("plush")?"Plush":has("statue")?"Statues":has("model kit")?"Model kits":"Action figures"};
   if(has("dvd","blu-ray","blu ray","movies")) return {cat:"media",type:"Movies"};
-  if(has("vinyl","music","cds"," cd")) return {cat:"media",type:"Music"};
+  if(has("vinyl","music","cds","cd")) return {cat:"media",type:"Music"};
   if(has("comic")) return {cat:"media",type:"Comics"};
   if(has("book")) return {cat:"media",type:"Books"};
   if(has("trading card","pokemon","pokémon")) return {cat:"cards",type:has("pokemon","pokémon")?"Pokémon":"Other"};
@@ -332,7 +335,8 @@ const EXAMPLES=[
  {name:"Dune",cat:"media",type:"Books",maker:"Frank Herbert",detail:"Paperback",condition:"Good",paid:10,value:8,status:"owned",location:"Living room bookcase"},
  {name:"The Legend of Zelda: Breath of the Wild",cat:"media",type:"Games",maker:"Nintendo",detail:"Switch",condition:"Like new",paid:60,value:40,status:"owned"},
  {name:"Blue-Eyes White Dragon",cat:"cards",type:"Yu-Gi-Oh!",maker:"Legend of Blue Eyes",detail:"LOB-001",value:250,status:"wishlist"},
- {name:"Kind of Blue",cat:"media",type:"Music",maker:"Miles Davis",detail:"Vinyl LP",condition:"Good",paid:25,value:30,status:"sold"}
+ {name:"Kind of Blue",cat:"media",type:"Music",maker:"Miles Davis",detail:"Vinyl LP",condition:"Good",paid:25,value:30,status:"sold"},
+ {name:"Spider-Man #03",cat:"figures",type:"Funko Pop",maker:"Funko, Marvel",detail:"Boxed",condition:"New",paid:12,value:30,status:"owned",location:"Display shelf"}
 ].map((e,i)=>({...e,id:"ex"+i,example:true}));
 
 const $=id=>document.getElementById(id);
