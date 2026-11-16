@@ -480,9 +480,10 @@ async function lookMusic(c){
   return {name:r.title,maker:ac&&ac[0]&&ac[0].name||"",detail:fmt||"",cat:"media",type:"Music",source:"MusicBrainz"};
 }
 async function lookProduct(c){
-  const j=await getJSON("https://api.upcitemdb.com/prod/trial/lookup?upc="+c); const it=j&&j.items&&j.items[0];
+  if(!sb) return null; let it=null;
+  try{ const r=await sb.functions.invoke("lookup",{body:{upc:c}}); it=r.data&&r.data.items&&r.data.items[0]; }catch(e){}
   if(!it||!it.title) return null; const g=guessCat(it.category,it.title)||{};
-  return {name:it.title,maker:it.brand||"",detail:it.size||"",cat:g.cat,type:g.type,source:"UPCitemdb"};
+  return {name:it.title,maker:it.brand||"",detail:it.size||"",cat:g.cat,type:g.type,source:"the product database"};
 }
 async function lookup(code){
   code=String(code).replace(/[^0-9Xx]/g,"");
