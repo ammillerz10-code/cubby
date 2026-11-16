@@ -144,6 +144,7 @@ dialog::backdrop{background:rgba(10,14,25,.55)}
 .foot{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .foot span{margin-right:auto}
 .actrow{display:flex;flex-wrap:wrap;gap:10px}
+.sub.loc{font-weight:700;color:var(--ink);font-size:12px}
 .bc{display:flex;gap:8px}.bc .field{flex:1}
 #scanner{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
 #scanner[hidden]{display:none}
@@ -204,6 +205,7 @@ dialog::backdrop{background:rgba(10,14,25,.55)}
         <label>You paid ($)<input class="field" id="f-paid" inputmode="decimal" autocomplete="off"></label>
         <label>Worth now ($)<input class="field" id="f-value" inputmode="decimal" autocomplete="off"></label>
         <label class="full">Status<select class="field" id="f-status"><option value="owned">In my collection</option><option value="forsale">For sale</option><option value="sold">Sold</option><option value="wishlist">Wishlist</option></select></label>
+        <label class="full">Where it's kept<input class="field" id="f-loc" list="loc-list" autocomplete="off" placeholder="Bedroom closet, shelf 2"><datalist id="loc-list"></datalist></label>
         <label class="full">Notes<textarea class="field" id="f-notes" rows="2"></textarea></label>
       </div>
       <div class="listing" id="listing" hidden>
@@ -291,11 +293,11 @@ function guessCat(category,title){
 /* ---- end pure logic ---- */
 
 const EXAMPLES=[
- {name:"Air Jordan 1 Retro High OG",cat:"closet",type:"Sneakers",maker:"Nike",detail:"US 10",condition:"Like new",paid:180,value:320,status:"owned"},
- {name:"Charizard",cat:"cards",type:"Pokémon",maker:"Base Set",detail:"4/102, PSA 8",condition:"Good",paid:900,value:1400,status:"owned"},
+ {name:"Air Jordan 1 Retro High OG",cat:"closet",type:"Sneakers",maker:"Nike",detail:"US 10",condition:"Like new",paid:180,value:320,status:"owned",location:"Bedroom closet, top shelf"},
+ {name:"Charizard",cat:"cards",type:"Pokémon",maker:"Base Set",detail:"4/102, PSA 8",condition:"Good",paid:900,value:1400,status:"owned",location:"Card binder 1"},
  {name:"Harbor at Dusk",cat:"art",type:"Prints",maker:"Local printmaker",detail:"18 x 24 in, 12 of 50",condition:"New",paid:150,value:150,status:"owned"},
  {name:"501 Original Fit Jeans",cat:"closet",type:"Bottoms",maker:"Levi's",detail:"32 x 32",condition:"Good",paid:40,value:35,status:"forsale"},
- {name:"Dune",cat:"media",type:"Books",maker:"Frank Herbert",detail:"Paperback",condition:"Good",paid:10,value:8,status:"owned"},
+ {name:"Dune",cat:"media",type:"Books",maker:"Frank Herbert",detail:"Paperback",condition:"Good",paid:10,value:8,status:"owned",location:"Living room bookcase"},
  {name:"The Legend of Zelda: Breath of the Wild",cat:"media",type:"Games",maker:"Nintendo",detail:"Switch",condition:"Like new",paid:60,value:40,status:"owned"},
  {name:"Blue-Eyes White Dragon",cat:"cards",type:"Yu-Gi-Oh!",maker:"Legend of Blue Eyes",detail:"LOB-001",value:250,status:"wishlist"},
  {name:"Kind of Blue",cat:"media",type:"Music",maker:"Miles Davis",detail:"Vinyl LP",condition:"Good",paid:25,value:30,status:"sold"}
@@ -303,7 +305,7 @@ const EXAMPLES=[
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const S={items:[],loaded:false,mode:"none",cat:"all",status:"all",sort:"new",q:"",col:null,sample:null,canSee:false,slow:false};
+const S={items:[],loaded:false,mode:"none",cat:"all",status:"all",sort:"new",q:"",loc:"all",col:null,sample:null,canSee:false,slow:false};
 let editing=null, photoData="", delArmed=false, toastT=0;
 
 function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),2800); }
@@ -322,8 +324,9 @@ function render(){
   const q=$("search"); if(q){ q.value=S.q; }
 }
 function filtered(all){
-  let list=all.filter(i=>(S.cat==="all"||i.cat===S.cat)&&(S.status==="all"||i.status===S.status));
-  if(S.q.trim()){ const qt=tokens(S.q); const qd=digits(S.q); list=list.filter(i=>{ const hay=tokens([i.name,i.maker,i.detail,i.type,i.notes].join(" ")); return qt.every(t=>hay.some(h=>h.startsWith(t))) || (qd.length>=4 && digits(i.barcode).includes(qd)); }); }
+  if(S.loc!=="all"&&!all.some(i=>i.location===S.loc)) S.loc="all";
+  let list=all.filter(i=>(S.cat==="all"||i.cat===S.cat)&&(S.status==="all"||i.status===S.status)&&(S.loc==="all"||i.location===S.loc));
+  if(S.q.trim()){ const qt=tokens(S.q); const qd=digits(S.q); list=list.filter(i=>{ const hay=tokens([i.name,i.maker,i.detail,i.type,i.notes,i.location].join(" ")); return qt.every(t=>hay.some(h=>h.startsWith(t))) || (qd.length>=4 && digits(i.barcode).includes(qd)); }); }
   const by={new:(a,b)=>(b.createdAt||0)-(a.createdAt||0), name:(a,b)=>a.name.localeCompare(b.name), value:(a,b)=>(b.value||0)-(a.value||0)}[S.sort];
   return S.items.length? list.slice().sort(by) : (S.sort==="new"?list:list.slice().sort(by));
 }
@@ -343,16 +346,18 @@ function collectionHTML(all){
     <div class="tabs" role="group" aria-label="Collections">${tabs.map(([k,l,n])=>`<button class="tab" type="button" data-cat="${k}" aria-pressed="${S.cat===k}">${l}<b>${n}</b></button>`).join("")}</div>
     <input class="field" id="search" type="search" placeholder="Search or enter barcode" aria-label="Search your collection">
     <select class="field" id="status-sel" aria-label="Status">${[["all","Any status"],...Object.entries(STATUS)].map(([k,l])=>`<option value="${k}"${S.status===k?" selected":""}>${l}</option>`).join("")}</select>
-    <select class="field" id="sort-sel" aria-label="Sort">${[["new","Newest first"],["name","Name"],["value","Highest value"]].map(([k,l])=>`<option value="${k}"${S.sort===k?" selected":""}>${l}</option>`).join("")}</select>
+    ${locSel(all)}<select class="field" id="sort-sel" aria-label="Sort">${[["new","Newest first"],["name","Name"],["value","Highest value"]].map(([k,l])=>`<option value="${k}"${S.sort===k?" selected":""}>${l}</option>`).join("")}</select>
   </div>
   <div class="grid" id="grid">${gridHTML(list)}</div>`;
 }
+function locs(all){ return [...new Set(all.map(i=>i.location).filter(Boolean))].sort((a,b)=>a.localeCompare(b)); }
+function locSel(all){ const l=locs(all); return l.length?`<select class="field" id="loc-sel" aria-label="Where it is kept"><option value="all">Kept anywhere</option>${l.map(x=>`<option value="${esc(x)}"${S.loc===x?" selected":""}>${esc(x)}</option>`).join("")}</select>`:""; }
 function gridHTML(list){
   return list.length? list.map(cardHTML).join("") : `<div class="empty">Nothing matches. ${S.q.trim()?"You don't own this yet, as far as Cubby can tell.":"Try another filter."}</div>`;
 }
 function cardHTML(it){
   const sub=[it.maker,it.detail||it.type].filter(Boolean).join(" · ");
-  return `<button class="card" type="button" data-id="${esc(it.id)}">${tile(it)}<div class="meta"><div class="nm">${esc(it.name)}</div><div class="sub">${esc(sub)}</div><div class="row"><span class="val">${money(it.value)}</span>${it.status!=="owned"?`<span class="pill ${esc(it.status)}">${STATUS[it.status]||""}</span>`:""}</div></div></button>`;
+  return `<button class="card" type="button" data-id="${esc(it.id)}">${tile(it)}<div class="meta"><div class="nm">${esc(it.name)}</div><div class="sub">${esc(sub)}</div>${it.location?`<div class="sub loc">Kept: ${esc(it.location)}</div>`:""}<div class="row"><span class="val">${money(it.value)}</span>${it.status!=="owned"?`<span class="pill ${esc(it.status)}">${STATUS[it.status]||""}</span>`:""}</div></div></button>`;
 }
 function showcaseHTML(all){
   const mine=all.filter(i=>i.status==="owned"||i.status==="forsale").sort((a,b)=>(b.photo?1:0)-(a.photo?1:0));
@@ -377,14 +382,14 @@ function openItem(it,scan){
   $("f-cat").innerHTML=Object.entries(CATS).map(([k,c])=>`<option value="${k}"${k===d.cat?" selected":""}>${c.label}</option>`).join("");
   setCat(d.cat,d.type);
   $("f-name").value=d.name||""; $("f-maker").value=d.maker||""; $("f-detail").value=d.detail||""; $("f-cond").value=d.condition||"";
-  $("f-barcode").value=d.barcode||""; $("f-paid").value=d.paid??""; $("f-value").value=d.value??""; $("f-status").value=d.status||"owned"; $("f-notes").value=d.notes||"";
+  $("f-barcode").value=d.barcode||""; $("f-paid").value=d.paid??""; $("f-value").value=d.value??""; $("f-status").value=d.status||"owned"; $("f-notes").value=d.notes||""; $("f-loc").value=d.location||""; $("loc-list").innerHTML=locs(S.items).map(x=>`<option value="${esc(x)}">`).join("");
   photoData=d.photo||""; setPreview(); $("f-photo").value="";
   $("listing").hidden=true; $("copy-btn").hidden=true; $("match").hidden=true; $("scanner").hidden=true;
   $("delete-btn").hidden=!editing; delArmed=false; $("delete-btn").textContent="Delete"; hint(HINT);
   $("dlg").showModal(); if(scan) startScan(); else if(!it) $("f-name").focus();
 }
 function formItem(){
-  return {name:$("f-name").value.trim(),cat:$("f-cat").value,type:$("f-type").value,maker:$("f-maker").value.trim(),detail:$("f-detail").value.trim(),condition:$("f-cond").value,barcode:$("f-barcode").value.replace(/[^0-9Xx]/g,""),paid:num($("f-paid").value),value:num($("f-value").value),status:$("f-status").value,notes:$("f-notes").value.trim(),photo:photoData};
+  return {name:$("f-name").value.trim(),cat:$("f-cat").value,type:$("f-type").value,maker:$("f-maker").value.trim(),detail:$("f-detail").value.trim(),condition:$("f-cond").value,barcode:$("f-barcode").value.replace(/[^0-9Xx]/g,""),paid:num($("f-paid").value),value:num($("f-value").value),status:$("f-status").value,notes:$("f-notes").value.trim(),location:$("f-loc").value.trim().slice(0,80),photo:photoData};
 }
 function checkMatch(){
   const f=formItem(); const m=findMatches(f,S.items,editing?.id); const box=$("match");
@@ -533,7 +538,7 @@ $("main").addEventListener("click",e=>{
   if(e.target.id==="copy-list"){ const mine=shown().filter(i=>i.status==="owned"||i.status==="forsale"); copy(mine.map(i=>"• "+[i.maker,i.name,i.detail].filter(Boolean).join(", ")).join("\n")); }
 });
 $("main").addEventListener("input",e=>{ if(e.target.id==="search"){ S.q=e.target.value; const g=$("grid"); if(g) g.innerHTML=gridHTML(filtered(shown())); } });
-$("main").addEventListener("change",e=>{ if(e.target.id==="status-sel"){ S.status=e.target.value; render(); } if(e.target.id==="sort-sel"){ S.sort=e.target.value; render(); } });
+$("main").addEventListener("change",e=>{ if(e.target.id==="status-sel"){ S.status=e.target.value; render(); } if(e.target.id==="loc-sel"){ S.loc=e.target.value; render(); } if(e.target.id==="sort-sel"){ S.sort=e.target.value; render(); } });
 window.addEventListener("hashchange",render);
 boot();
 </script>
