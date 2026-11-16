@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cubby Collection Tracker</title>
+<meta name="description" content="Catalog your clothes, sneakers, media, cards and art. Scan barcodes, track value, and spot duplicates.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a 1970s record shop. Cream paper, ink outlines with hard offset shadows, a three-colour stripe, one funky display face. */
+:root{
+  --bg:#F3E7CE; --surface:#FFF8E7; --ink:#2B1D14; --muted:#75604C; --line:#2B1D14; --shadow:#2B1D14; --accent:#DD4F26; --accent-ink:#FFF8E7;
+  --c1:#DD4F26; --c2:#E9A820; --c3:#1F8A84; --hero:#F2C24B;
+  --sale:#83470A; --sale-bg:#F7DFA8; --sold:#1D6746; --sold-bg:#CFE8D6; --wish:#6A3D7C; --wish-bg:#EBD3EE; --bad:#B3261E;
+  --t-closet:#BEE0DA; --t-media:#F5C2A4; --t-cards:#F3D889; --t-art:#E8BCCB; --tile-ink:#2B1D14;
+  --display:"Shrikhand","Cooper Black","Rockwell Extra Bold",Georgia,serif;
+  --body:"Karla","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1E1510; --surface:#2A1E17; --ink:#F4E9D2; --muted:#C2AC92; --line:#7A6250; --shadow:#000000; --accent:#F0683C; --accent-ink:#1E1510;
+    --c1:#F0683C; --c2:#E9A820; --c3:#2A9D97; --hero:#5A3F12;
+    --sale:#F2C063; --sale-bg:#4A3410; --sold:#8AD3AB; --sold-bg:#173526; --wish:#E0B0E8; --wish-bg:#3B2444; --bad:#FF8F7A;
+    --t-closet:#1F4A47; --t-media:#5C2E1B; --t-cards:#5A4512; --t-art:#4D2A3A; --tile-ink:#F4E9D2;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1E1510; --surface:#2A1E17; --ink:#F4E9D2; --muted:#C2AC92; --line:#7A6250; --shadow:#000000; --accent:#F0683C; --accent-ink:#1E1510;
+  --c1:#F0683C; --c2:#E9A820; --c3:#2A9D97; --hero:#5A3F12;
+  --sale:#F2C063; --sale-bg:#4A3410; --sold:#8AD3AB; --sold-bg:#173526; --wish:#E0B0E8; --wish-bg:#3B2444; --bad:#FF8F7A;
+  --t-closet:#1F4A47; --t-media:#5C2E1B; --t-cards:#5A4512; --t-art:#4D2A3A; --tile-ink:#F4E9D2;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px 64px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding:20px 0 16px}
+.brand{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.02em;margin-right:auto}
+.brand span{color:var(--accent)}
+nav{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px}
+nav a{padding:6px 14px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:500}
+nav a[aria-current="page"]{background:var(--ink);color:var(--bg)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 16px;font-weight:600;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.55;cursor:default}
+.stats{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;min-width:0}
+.stat .k{color:var(--muted);font-size:13px}
+.stat .v{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stat.big .v{font-size:44px;line-height:1.05}
+.stat .s{font-size:13px;color:var(--muted)}
+.up{color:var(--sold)} .down{color:var(--bad)}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-right:auto}
+.tab{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 12px;cursor:pointer;font-weight:500}
+.tab b{font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums;margin-left:4px}
+.tab[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab[aria-pressed="true"] b{color:inherit;opacity:.7}
+.field,select.field{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 10px;min-width:0}
+#search{width:220px}
+.note{background:var(--surface);border:1px dashed var(--line);border-radius:var(--r);padding:10px 14px;color:var(--muted);margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:14px}
+.grid.show{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.card{display:flex;flex-direction:column;text-align:left;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;min-width:0}
+.card:hover{border-color:var(--accent)}
+.ph{aspect-ratio:1/1;display:grid;place-items:center;position:relative;background:var(--t-closet);color:var(--tile-ink)}
+.ph.media{background:var(--t-media)} .ph.cards{background:var(--t-cards)} .ph.art{background:var(--t-art)}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph .ini{font-family:var(--display);font-weight:700;font-size:44px;letter-spacing:-.03em;opacity:.55}
+.ph .ex{position:absolute;top:8px;left:8px;background:var(--surface);color:var(--muted);border-radius:999px;font-size:11px;padding:2px 8px;font-weight:600}
+.meta{padding:10px 12px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.nm{font-weight:600;overflow-wrap:anywhere}
+.sub{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;min-height:22px}
+.val{font-variant-numeric:tabular-nums;font-weight:600}
+.pill{font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.pill.forsale{color:var(--sale);background:var(--sale-bg)} .pill.sold{color:var(--sold);background:var(--sold-bg)} .pill.wishlist{color:var(--wish);background:var(--wish-bg)}
+.empty{grid-column:1/-1;padding:36px 16px;text-align:center;color:var(--muted)}
+.showhead{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:8px 0 20px}
+.showhead h1{font-family:var(--display);font-weight:700;font-size:44px;letter-spacing:-.03em;line-height:1.05;margin:0;margin-right:auto;text-wrap:balance}
+.showhead p{margin:4px 0 0;color:var(--muted)}
+.foot{margin-top:28px;color:var(--muted);font-size:13px}
+dialog{border:1px solid var(--line);border-radius:18px;background:var(--surface);color:var(--ink);padding:0;width:min(640px,calc(100vw - 24px));max-height:calc(100vh - 24px)}
+dialog::backdrop{background:rgba(10,14,25,.55)}
+.dhead{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1}
+.dhead h2{font-family:var(--display);font-size:22px;margin:0;letter-spacing:-.02em}
+.dbody{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.photo{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.photo .ph{width:112px;border-radius:12px;overflow:hidden;flex:none}
+.photo .acts{display:flex;flex-direction:column;gap:8px;align-items:flex-start;flex:1;min-width:200px}
+.hint{color:var(--muted);font-size:13px;margin:0}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+.fg label.full{grid-column:1/-1}
+.fg .field{color:var(--ink);font-size:15px;width:100%}
+.match{border:1px solid var(--sale);background:var(--sale-bg);color:var(--ink);border-radius:12px;padding:10px 12px}
+.match strong{color:var(--sale)}
+.match ul{margin:6px 0 0;padding-left:18px}
+.listing textarea{width:100%;min-height:150px;resize:vertical}
+.dfoot{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;align-items:center}
+.dfoot .sp{margin-right:auto}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:500;max-width:calc(100vw - 32px);opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:1}
+@media (prefers-reduced-motion: reduce){#toast{transition:none}}
+@media (max-width:760px){.stats{grid-template-columns:1fr 1fr}.stat.big{grid-column:1/-1}.stat.big .v{font-size:38px}#search{width:100%;flex:1 1 100%}.showhead h1{font-size:34px}}
+@media (max-width:420px){.fg{grid-template-columns:1fr}.grid,.grid.show{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.wrap{padding:0 16px 48px}}
+
+/* retro treatment */
+.brand,.stat .v,.dhead h2,.showhead h1,.ph .ini{font-weight:400;letter-spacing:0}
+.brand{font-size:34px;line-height:1}
+.stripes{height:18px;border:2px solid var(--line);border-radius:999px;margin-bottom:22px;background:linear-gradient(to bottom,var(--c1) 0 33.4%,var(--c2) 33.4% 66.7%,var(--c3) 66.7% 100%)}
+.stat,.card,.btn,nav,.field,select.field,.tab,.note,dialog,.match{border-width:2px}
+.stat,.card,.btn,nav,dialog{border-color:var(--line);box-shadow:4px 4px 0 var(--shadow)}
+.stat.big{background:var(--hero)}
+.stat.big .k,.stat.big .s{color:var(--ink)}
+.btn{transition:transform .08s,box-shadow .08s}
+.btn:hover{border-color:var(--line)}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--shadow)}
+.card:hover{border-color:var(--line);transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--accent)}
+.card{transition:transform .1s,box-shadow .1s}
+.ph{border-bottom:2px solid var(--line)}
+.photo .ph{border:2px solid var(--line)}
+.ph .ini{font-size:52px;opacity:.8}
+.ph .ex{border:2px solid var(--line);color:var(--ink);text-transform:uppercase;letter-spacing:.06em;font-size:10px}
+.tab,.field,select.field{border-color:var(--line)}
+.tab{font-weight:700}
+.stat .k,.fg label,.tab,nav a,.btn{letter-spacing:.01em}
+.stat .k{text-transform:uppercase;letter-spacing:.08em;font-size:12px;font-weight:700}
+.pill{border:2px solid currentColor;text-transform:uppercase;letter-spacing:.05em;font-size:10.5px}
+.note{border-style:dashed;border-color:var(--line)}
+.dhead{border-bottom:2px solid var(--line)}
+#toast{border:2px solid var(--bg)}
+@media (prefers-reduced-motion: reduce){.btn,.card{transition:none}}
+.foot{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.foot span{margin-right:auto}
+.actrow{display:flex;flex-wrap:wrap;gap:10px}
+.bc{display:flex;gap:8px}.bc .field{flex:1}
+#scanner{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+#scanner[hidden]{display:none}
+#scan-video{width:100%;max-height:280px;object-fit:cover;background:#000;border:2px solid var(--line);border-radius:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">Cubby<span>.</span></div>
+    <nav aria-label="Views">
+      <a href="#collection" id="nav-collection">Collection</a>
+      <a href="#showcase" id="nav-showcase">Showcase</a>
+    </nav>
+    <button class="btn primary" id="add-btn" type="button">Add item</button>
+  </header>
+  <div class="stripes" aria-hidden="true"></div>
+  <main id="main"></main>
+  <div class="foot">
+    <span id="save-state">Loading your collection.</span>
+    <button class="btn" type="button" id="export-btn">Export backup</button>
+    <label class="btn" for="import-file">Import backup</label>
+    <input type="file" id="import-file" accept="application/json,.json" hidden>
+  </div>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlg-title">
+  <form id="item-form" novalidate>
+    <div class="dhead">
+      <h2 id="dlg-title">Add item</h2>
+      <button class="btn" type="button" id="close-btn">Close</button>
+    </div>
+    <div class="dbody">
+      <div class="photo">
+        <div class="ph" id="f-preview"><span class="ini">+</span></div>
+        <div class="acts">
+          <div class="actrow">
+            <button class="btn primary" type="button" id="scan-btn">Scan a barcode</button>
+            <label class="btn" for="f-photo">Add a photo</label>
+            <input type="file" id="f-photo" accept="image/*" hidden>
+          </div>
+          <p class="hint" id="photo-hint"></p>
+        </div>
+      </div>
+      <div id="scanner" hidden>
+        <video id="scan-video" playsinline muted></video>
+        <button class="btn" type="button" id="scan-stop">Stop scanning</button>
+      </div>
+      <div class="match" id="match" hidden></div>
+      <div class="fg">
+        <label class="full">Name<input class="field" id="f-name" autocomplete="off" required></label>
+        <label>Collection<select class="field" id="f-cat"></select></label>
+        <label>Type<select class="field" id="f-type"></select></label>
+        <label><span id="l-maker">Brand</span><input class="field" id="f-maker" autocomplete="off"></label>
+        <label><span id="l-detail">Size</span><input class="field" id="f-detail" autocomplete="off"></label>
+        <label>Condition<select class="field" id="f-cond"><option value="">Not set</option><option>New</option><option>Like new</option><option>Good</option><option>Fair</option><option>Worn</option></select></label>
+        <label>Barcode<span class="bc"><input class="field" id="f-barcode" inputmode="numeric" autocomplete="off"><button class="btn" type="button" id="lookup-btn">Look up</button></span></label>
+        <label>You paid ($)<input class="field" id="f-paid" inputmode="decimal" autocomplete="off"></label>
+        <label>Worth now ($)<input class="field" id="f-value" inputmode="decimal" autocomplete="off"></label>
+        <label class="full">Status<select class="field" id="f-status"><option value="owned">In my collection</option><option value="forsale">For sale</option><option value="sold">Sold</option><option value="wishlist">Wishlist</option></select></label>
+        <label class="full">Notes<textarea class="field" id="f-notes" rows="2"></textarea></label>
+      </div>
+      <div class="listing" id="listing" hidden>
+        <label class="hint" for="f-listing">Listing text for Vinted, eBay or anywhere else. Edit it, then copy.</label>
+        <textarea class="field" id="f-listing"></textarea>
+      </div>
+      <div class="dfoot">
+        <button class="btn danger sp" type="button" id="delete-btn" hidden>Delete</button>
+        <button class="btn" type="button" id="listing-btn">Write a listing</button>
+        <button class="btn" type="button" id="copy-btn" hidden>Copy listing</button>
+        <button class="btn primary" type="submit" id="save-btn">Save item</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+<script>
+/* ---- pure logic (tested separately) ---- */
+const CATS = {
+  closet:{label:"Closet", types:["Sneakers","Tops","Bottoms","Outerwear","Shoes","Accessories"], maker:"Brand", detail:"Size"},
+  media:{label:"Media", types:["Movies","Books","Games","Comics","Music"], maker:"Author, artist or studio", detail:"Format or platform"},
+  cards:{label:"Cards", types:["Pokémon","Sports","Magic","Yu-Gi-Oh!","Other"], maker:"Set", detail:"Card number or grade"},
+  art:{label:"Art", types:["Prints","Paintings","Photography","Sculpture","Posters","Other"], maker:"Artist", detail:"Size or edition"}
+};
+const STATUS = {owned:"In collection", forsale:"For sale", sold:"Sold", wishlist:"Wishlist"};
+const STOP = new Set(["the","a","an","of","and","in","for","edition","with"]);
+function tokens(s){ return [...new Set(String(s||"").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g," ").trim().split(" ").filter(t=>t && !STOP.has(t)))]; }
+function nameScore(a,b){
+  const A=tokens(a), B=tokens(b); if(!A.length||!B.length) return 0;
+  const setB=new Set(B); const inter=A.filter(t=>setB.has(t)).length; const min=Math.min(A.length,B.length), max=Math.max(A.length,B.length);
+  const overlap=inter/min; if(overlap<0.75) return 0;
+  if(inter>=2) return overlap*(0.6+0.4*inter/max);
+  if(min===1 && max<=3 && A.concat(B).some(t=>t.length>=4 && A.includes(t) && setB.has(t))) return 0.6;
+  return 0;
+}
+function digits(s){ return String(s||"").replace(/\D/g,""); }
+function findMatches(cand, items, excludeId){
+  const bc=digits(cand.barcode); const out=[];
+  for(const it of items){
+    if(it.id===excludeId) continue;
+    if(bc && bc.length>=6 && digits(it.barcode)===bc){ out.push({item:it,why:"same barcode",score:2}); continue; }
+    const s=nameScore(cand.name,it.name); if(s>=0.6) out.push({item:it,why:"similar name",score:s});
+  }
+  return out.sort((x,y)=>y.score-x.score).slice(0,4);
+}
+function money(n){ if(n==null||isNaN(n)) return ""; return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:n%1?2:0}).format(n); }
+function num(s){ const n=parseFloat(String(s).replace(/[^0-9.\-]/g,"")); return isNaN(n)?null:n; }
+function totals(items){
+  const mine=items.filter(i=>i.status==="owned"||i.status==="forsale");
+  const sum=(a,k)=>a.reduce((t,i)=>t+(typeof i[k]==="number"?i[k]:0),0);
+  const sale=items.filter(i=>i.status==="forsale");
+  return {count:mine.length, value:sum(mine,"value"), paid:sum(mine,"paid"), gain:sum(mine,"value")-sum(mine,"paid"), saleCount:sale.length, saleValue:sum(sale,"value"), sold:items.filter(i=>i.status==="sold").length, wish:items.filter(i=>i.status==="wishlist").length};
+}
+function listingText(it){
+  const c=CATS[it.cat]||CATS.closet;
+  const title=[it.cat==="closet"||it.cat==="art"?it.maker:"", it.name, it.cat==="closet"?"":"", ].filter(Boolean).join(" ");
+  const lines=[title, ""];
+  if(it.maker && !(it.cat==="closet"||it.cat==="art")) lines.push(c.maker+": "+it.maker);
+  if(it.detail) lines.push(c.detail+": "+it.detail);
+  if(it.condition) lines.push("Condition: "+it.condition);
+  if(it.notes) lines.push("", it.notes);
+  if(typeof it.value==="number") lines.push("", "Price: "+money(it.value));
+  return lines.join("\n").replace(/\n{3,}/g,"\n\n").trim();
+}
+function isISBN(c){ return /^(978|979)\d{10}$/.test(c)||/^\d{9}[\dXx]$/.test(c); }
+function guessCat(category,title){
+  const t=(String(category||"")+" "+String(title||"")).toLowerCase();
+  const has=(...w)=>w.some(x=>t.includes(x));
+  if(has("video game","nintendo","playstation","xbox")) return {cat:"media",type:"Games"};
+  if(has("dvd","blu-ray","blu ray","movies")) return {cat:"media",type:"Movies"};
+  if(has("vinyl","music","cds"," cd")) return {cat:"media",type:"Music"};
+  if(has("comic")) return {cat:"media",type:"Comics"};
+  if(has("book")) return {cat:"media",type:"Books"};
+  if(has("trading card","pokemon","pokémon")) return {cat:"cards",type:has("pokemon","pokémon")?"Pokémon":"Other"};
+  if(has("sneaker","athletic shoe")) return {cat:"closet",type:"Sneakers"};
+  if(has("shoe","boot","sandal")) return {cat:"closet",type:"Shoes"};
+  if(has("jacket","coat","outerwear")) return {cat:"closet",type:"Outerwear"};
+  if(has("pants","jeans","shorts","skirt")) return {cat:"closet",type:"Bottoms"};
+  if(has("shirt","top","hoodie","sweater","clothing","apparel")) return {cat:"closet",type:"Tops"};
+  if(has("poster","art print","painting")) return {cat:"art",type:has("poster")?"Posters":"Prints"};
+  return null;
+}
+/* ---- end pure logic ---- */
+
+const EXAMPLES=[
+ {name:"Air Jordan 1 Retro High OG",cat:"closet",type:"Sneakers",maker:"Nike",detail:"US 10",condition:"Like new",paid:180,value:320,status:"owned"},
+ {name:"Charizard",cat:"cards",type:"Pokémon",maker:"Base Set",detail:"4/102, PSA 8",condition:"Good",paid:900,value:1400,status:"owned"},
+ {name:"Harbor at Dusk",cat:"art",type:"Prints",maker:"Local printmaker",detail:"18 x 24 in, 12 of 50",condition:"New",paid:150,value:150,status:"owned"},
+ {name:"501 Original Fit Jeans",cat:"closet",type:"Bottoms",maker:"Levi's",detail:"32 x 32",condition:"Good",paid:40,value:35,status:"forsale"},
+ {name:"Dune",cat:"media",type:"Books",maker:"Frank Herbert",detail:"Paperback",condition:"Good",paid:10,value:8,status:"owned"},
+ {name:"The Legend of Zelda: Breath of the Wild",cat:"media",type:"Games",maker:"Nintendo",detail:"Switch",condition:"Like new",paid:60,value:40,status:"owned"},
+ {name:"Blue-Eyes White Dragon",cat:"cards",type:"Yu-Gi-Oh!",maker:"Legend of Blue Eyes",detail:"LOB-001",value:250,status:"wishlist"},
+ {name:"Kind of Blue",cat:"media",type:"Music",maker:"Miles Davis",detail:"Vinyl LP",condition:"Good",paid:25,value:30,status:"sold"}
+].map((e,i)=>({...e,id:"ex"+i,example:true}));
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const S={items:[],loaded:false,mode:"none",cat:"all",status:"all",sort:"new",q:"",col:null,sample:null,canSee:false,slow:false};
+let editing=null, photoData="", delArmed=false, toastT=0;
+
+function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),2800); }
+function shown(){ return S.loaded && !S.items.length ? EXAMPLES : S.items; }
+function initials(it){ return esc(tokens(it.name).slice(0,2).map(t=>t[0].toUpperCase()).join("")||"?"); }
+function tile(it){ return `<div class="ph ${esc(it.cat)}">${it.photo?`<img src="${esc(it.photo)}" alt="">`:`<span class="ini">${initials(it)}</span>`}${it.example?'<span class="ex">Example</span>':""}</div>`; }
+
+function view(){ return location.hash==="#showcase"?"showcase":"collection"; }
+function render(){
+  const v=view();
+  $("nav-collection").toggleAttribute("aria-current",false); $("nav-showcase").toggleAttribute("aria-current",false);
+  $("nav-"+v).setAttribute("aria-current","page");
+  const all=shown();
+  if(!S.loaded){ $("main").innerHTML=`<div class="note">${S.slow?"Your saved collection can't be reached yet. Still trying.":"Loading your collection."}</div>`; return; }
+  $("main").innerHTML = v==="showcase" ? showcaseHTML(all) : collectionHTML(all);
+  const q=$("search"); if(q){ q.value=S.q; }
+}
+function filtered(all){
+  let list=all.filter(i=>(S.cat==="all"||i.cat===S.cat)&&(S.status==="all"||i.status===S.status));
+  if(S.q.trim()){ const qt=tokens(S.q); const qd=digits(S.q); list=list.filter(i=>{ const hay=tokens([i.name,i.maker,i.detail,i.type,i.notes].join(" ")); return qt.every(t=>hay.some(h=>h.startsWith(t))) || (qd.length>=4 && digits(i.barcode).includes(qd)); }); }
+  const by={new:(a,b)=>(b.createdAt||0)-(a.createdAt||0), name:(a,b)=>a.name.localeCompare(b.name), value:(a,b)=>(b.value||0)-(a.value||0)}[S.sort];
+  return S.items.length? list.slice().sort(by) : (S.sort==="new"?list:list.slice().sort(by));
+}
+function collectionHTML(all){
+  const t=totals(all), list=filtered(all);
+  const gain=t.gain, gcls=gain>0?"up":gain<0?"down":"";
+  const tabs=[["all","All",all.length],...Object.entries(CATS).map(([k,c])=>[k,c.label,all.filter(i=>i.cat===k).length])];
+  return `
+  ${!S.items.length?'<div class="note">These are examples so you can see how Cubby looks. They disappear when you add your first item.</div>':""}
+  <section class="stats" aria-label="Summary">
+    <div class="stat big"><div class="k">Collection value</div><div class="v">${money(t.value)||"$0"}</div><div class="s">${t.count} item${t.count===1?"":"s"} you own</div></div>
+    <div class="stat"><div class="k">You paid</div><div class="v">${money(t.paid)||"$0"}</div><div class="s ${gcls}">${gain>0?"Up ":gain<0?"Down ":"Even"}${gain?money(Math.abs(gain)):""}</div></div>
+    <div class="stat"><div class="k">For sale</div><div class="v">${t.saleCount}</div><div class="s">${t.saleCount?money(t.saleValue)+" asking":"Nothing listed"}</div></div>
+    <div class="stat"><div class="k">Sold and wishlist</div><div class="v">${t.sold} / ${t.wish}</div><div class="s">sold / wanted</div></div>
+  </section>
+  <div class="controls">
+    <div class="tabs" role="group" aria-label="Collections">${tabs.map(([k,l,n])=>`<button class="tab" type="button" data-cat="${k}" aria-pressed="${S.cat===k}">${l}<b>${n}</b></button>`).join("")}</div>
+    <input class="field" id="search" type="search" placeholder="Search or enter barcode" aria-label="Search your collection">
+    <select class="field" id="status-sel" aria-label="Status">${[["all","Any status"],...Object.entries(STATUS)].map(([k,l])=>`<option value="${k}"${S.status===k?" selected":""}>${l}</option>`).join("")}</select>
+    <select class="field" id="sort-sel" aria-label="Sort">${[["new","Newest first"],["name","Name"],["value","Highest value"]].map(([k,l])=>`<option value="${k}"${S.sort===k?" selected":""}>${l}</option>`).join("")}</select>
+  </div>
+  <div class="grid" id="grid">${gridHTML(list)}</div>`;
+}
+function gridHTML(list){
+  return list.length? list.map(cardHTML).join("") : `<div class="empty">Nothing matches. ${S.q.trim()?"You don't own this yet, as far as Cubby can tell.":"Try another filter."}</div>`;
+}
+function cardHTML(it){
+  const sub=[it.maker,it.detail||it.type].filter(Boolean).join(" · ");
+  return `<button class="card" type="button" data-id="${esc(it.id)}">${tile(it)}<div class="meta"><div class="nm">${esc(it.name)}</div><div class="sub">${esc(sub)}</div><div class="row"><span class="val">${money(it.value)}</span>${it.status!=="owned"?`<span class="pill ${esc(it.status)}">${STATUS[it.status]||""}</span>`:""}</div></div></button>`;
+}
+function showcaseHTML(all){
+  const mine=all.filter(i=>i.status==="owned"||i.status==="forsale").sort((a,b)=>(b.photo?1:0)-(a.photo?1:0));
+  const parts=Object.entries(CATS).map(([k,c])=>[c.label.toLowerCase(),mine.filter(i=>i.cat===k).length]).filter(p=>p[1]).map(p=>p[1]+" "+p[0]).join(", ");
+  return `<div class="showhead"><div style="margin-right:auto"><h1>${mine.length} piece${mine.length===1?"":"s"} worth showing off</h1><p>${esc(parts)||"Add items to fill your showcase."}${!S.items.length?" (examples)":""}</p></div><button class="btn" type="button" id="copy-list">Copy as a list</button></div>
+  <div class="grid show">${mine.length?mine.map(it=>`<button class="card" type="button" data-id="${esc(it.id)}">${tile(it)}<div class="meta"><div class="nm">${esc(it.name)}</div><div class="sub">${esc([it.maker,it.detail].filter(Boolean).join(" · "))}</div></div></button>`).join(""):'<div class="empty">Nothing here yet.</div>'}</div>`;
+}
+
+/* ---- dialog ---- */
+const HINT="Scan or type a barcode and Cubby looks it up. It also warns you if you already own the item.";
+const hint=m=>{ $("photo-hint").textContent=m; };
+function setCat(cat,type){
+  const c=CATS[cat]||CATS.closet;
+  $("f-type").innerHTML=c.types.map(t=>`<option${t===type?" selected":""}>${esc(t)}</option>`).join("");
+  $("l-maker").textContent=c.maker; $("l-detail").textContent=c.detail;
+  $("f-preview").className="ph "+cat;
+}
+function setPreview(){ $("f-preview").innerHTML=photoData?`<img src="${esc(photoData)}" alt="Item photo">`:'<span class="ini">+</span>'; }
+function openItem(it,scan){
+  editing=it&&!it.example?it:null; const d=it||{cat:S.cat==="all"?"closet":S.cat,status:"owned"};
+  $("dlg-title").textContent=editing?"Edit item":it?"Add this example":"Add item";
+  $("f-cat").innerHTML=Object.entries(CATS).map(([k,c])=>`<option value="${k}"${k===d.cat?" selected":""}>${c.label}</option>`).join("");
+  setCat(d.cat,d.type);
+  $("f-name").value=d.name||""; $("f-maker").value=d.maker||""; $("f-detail").value=d.detail||""; $("f-cond").value=d.condition||"";
+  $("f-barcode").value=d.barcode||""; $("f-paid").value=d.paid??""; $("f-value").value=d.value??""; $("f-status").value=d.status||"owned"; $("f-notes").value=d.notes||"";
+  photoData=d.photo||""; setPreview(); $("f-photo").value="";
+  $("listing").hidden=true; $("copy-btn").hidden=true; $("match").hidden=true; $("scanner").hidden=true;
+  $("delete-btn").hidden=!editing; delArmed=false; $("delete-btn").textContent="Delete"; hint(HINT);
+  $("dlg").showModal(); if(scan) startScan(); else if(!it) $("f-name").focus();
+}
+function formItem(){
+  return {name:$("f-name").value.trim(),cat:$("f-cat").value,type:$("f-type").value,maker:$("f-maker").value.trim(),detail:$("f-detail").value.trim(),condition:$("f-cond").value,barcode:$("f-barcode").value.replace(/[^0-9Xx]/g,""),paid:num($("f-paid").value),value:num($("f-value").value),status:$("f-status").value,notes:$("f-notes").value.trim(),photo:photoData};
+}
+function checkMatch(){
+  const f=formItem(); const m=findMatches(f,S.items,editing?.id); const box=$("match");
+  if(!m.length){ box.hidden=true; return m; }
+  box.hidden=false;
+  box.innerHTML=`<strong>You may already have this.</strong><ul>${m.map(x=>`<li>${esc(x.item.name)}${x.item.detail?" ("+esc(x.item.detail)+")":""}, ${esc((STATUS[x.item.status]||"").toLowerCase())}: ${x.why}</li>`).join("")}</ul>`;
+  return m;
+}
+async function loadPhoto(file){
+  try{
+    const bmp=await createImageBitmap(file,{imageOrientation:"from-image"}).catch(()=>createImageBitmap(file));
+    const draw=max=>{ const k=Math.min(1,max/Math.max(bmp.width,bmp.height)); const c=document.createElement("canvas"); c.width=Math.round(bmp.width*k); c.height=Math.round(bmp.height*k); c.getContext("2d").drawImage(bmp,0,0,c.width,c.height); return c; };
+    photoData=draw(520).toDataURL("image/jpeg",0.72); setPreview();
+    if(!$("f-barcode").value){ const code=await readBarcode(draw(1400)); if(code) gotBarcode(code); }
+  }catch(e){ toast("That photo couldn't be opened. Try a JPEG or PNG."); }
+}
+async function readBarcode(canvas){
+  try{ if("BarcodeDetector" in window){ const r=await new BarcodeDetector().detect(canvas); const hit=r.find(x=>/^\d{8,14}$/.test(x.rawValue)); if(hit) return hit.rawValue; } }catch(e){}
+  try{ if(window.ZXing){ const res=await new ZXing.BrowserMultiFormatReader().decodeFromImageUrl(canvas.toDataURL("image/png")); if(res) return res.getText(); } }catch(e){}
+  return "";
+}
+
+/* ---- live scanner ---- */
+let stream=null, scanT=0;
+async function startScan(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ hint("This browser can't open the camera here. Add a photo of the barcode instead."); return; }
+  if(!("BarcodeDetector" in window)&&!window.ZXing){ hint("The scanner couldn't load. Check your connection, or type the barcode number."); return; }
+  try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280}},audio:false}); }
+  catch(e){ hint(e&&e.name==="NotAllowedError"?"Camera access is blocked. Allow the camera for this site in your browser settings, or add a photo of the barcode.":"No camera was found. Add a photo of the barcode or type the number."); return; }
+  const v=$("scan-video"); v.srcObject=stream; $("scanner").hidden=false; await v.play().catch(()=>{});
+  hint("Point the camera at the barcode and hold steady.");
+  const det="BarcodeDetector" in window?new BarcodeDetector():null; const zx=det?null:new ZXing.BrowserMultiFormatReader(); let busy=false;
+  scanT=setInterval(async()=>{
+    if(busy||v.readyState<2||!v.videoWidth) return; busy=true; let code="";
+    try{ if(det){ const r=await det.detect(v); const hit=r.find(x=>/^\d{8,14}$/.test(x.rawValue)); if(hit) code=hit.rawValue; } else { code=zx.decode(v).getText(); } }catch(e){}
+    busy=false; if(code&&stream){ stopScan(); gotBarcode(code); }
+  },220);
+}
+function stopScan(){ clearInterval(scanT); scanT=0; if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; } const v=$("scan-video"); v.srcObject=null; $("scanner").hidden=true; }
+
+/* ---- barcode lookup ---- */
+async function getJSON(url){
+  const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),8000);
+  try{ const r=await fetch(url,{signal:ctl.signal}); if(!r.ok) return null; return await r.json(); }catch(e){ return null; }finally{ clearTimeout(t); }
+}
+async function lookBook(c){
+  const j=await getJSON("https://openlibrary.org/api/books?bibkeys=ISBN:"+c+"&format=json&jscmd=data"); const d=j&&j["ISBN:"+c];
+  if(d&&d.title) return {name:d.title,maker:(d.authors||[]).map(a=>a.name).join(", "),cat:"media",type:"Books",source:"Open Library"};
+  const g=await getJSON("https://www.googleapis.com/books/v1/volumes?q=isbn:"+c); const v=g&&g.items&&g.items[0]&&g.items[0].volumeInfo;
+  if(v&&v.title) return {name:v.title,maker:(v.authors||[]).join(", "),cat:"media",type:"Books",source:"Google Books"};
+  return null;
+}
+async function lookMusic(c){
+  const j=await getJSON("https://musicbrainz.org/ws/2/release/?query=barcode:"+c+"&fmt=json&limit=1"); const r=j&&j.releases&&j.releases[0];
+  if(!r||!r.title) return null; const ac=r["artist-credit"]; const fmt=r.media&&r.media[0]&&r.media[0].format;
+  return {name:r.title,maker:ac&&ac[0]&&ac[0].name||"",detail:fmt||"",cat:"media",type:"Music",source:"MusicBrainz"};
+}
+async function lookProduct(c){
+  const j=await getJSON("https://api.upcitemdb.com/prod/trial/lookup?upc="+c); const it=j&&j.items&&j.items[0];
+  if(!it||!it.title) return null; const g=guessCat(it.category,it.title)||{};
+  return {name:it.title,maker:it.brand||"",detail:it.size||"",cat:g.cat,type:g.type,source:"UPCitemdb"};
+}
+async function lookup(code){
+  code=String(code).replace(/[^0-9Xx]/g,"");
+  if(code.length<8){ hint("Enter the full barcode number first."); return; }
+  const b=$("lookup-btn"); b.disabled=true; hint("Looking up "+code+".");
+  let hit=null;
+  try{
+    if(isISBN(code)) hit=await lookBook(code);
+    if(!hit){ const [m,u]=await Promise.all([lookMusic(code),lookProduct(code)]); hit=m||u; }
+  }finally{ b.disabled=false; }
+  if($("f-barcode").value.replace(/[^0-9Xx]/g,"")!==code) return;
+  if(!hit){ hint("No match found for "+code+". Type the details in and Cubby still tracks it."); return; }
+  if(hit.cat&&CATS[hit.cat]){ $("f-cat").value=hit.cat; setCat(hit.cat,hit.type); }
+  $("f-name").value=String(hit.name).slice(0,200);
+  if(hit.maker) $("f-maker").value=String(hit.maker).slice(0,120);
+  if(hit.detail&&!$("f-detail").value) $("f-detail").value=String(hit.detail).slice(0,120);
+  hint("Found on "+hit.source+". Check the details before saving."); checkMatch();
+}
+function gotBarcode(code){
+  $("f-barcode").value=code; const m=checkMatch();
+  if(m.some(x=>x.why==="same barcode")){ hint("Barcode "+code+" is already in your collection."); return; }
+  lookup(code);
+}
+
+/* ---- storage (on this device) ---- */
+let idb=null;
+function openDB(){ return new Promise((res,rej)=>{ const r=indexedDB.open("cubby",1); r.onupgradeneeded=()=>r.result.createObjectStore("items",{keyPath:"id"}); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+function tx(mode,fn){ return new Promise((res,rej)=>{ const t=idb.transaction("items",mode); const q=fn(t.objectStore("items")); t.oncomplete=()=>res(q&&q.result); t.onerror=()=>rej(t.error); t.onabort=()=>rej(t.error); }); }
+function newId(){ return "i"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function saveState(){ $("save-state").textContent=S.mode==="local"?"Your collection is saved on this device, in this browser. Export a backup to keep a copy.":"This browser won't save data here. Items you add are lost when you close the page."; }
+async function saveItem(data,id){
+  const now=Date.now(); const prev=S.items.find(i=>i.id===id);
+  const doc={...data,id:id||newId(),createdAt:prev?prev.createdAt:now,updatedAt:now};
+  if(idb) await tx("readwrite",s=>s.put(doc));
+  if(prev) Object.assign(prev,doc); else S.items.push(doc); render();
+}
+async function removeItem(id){ if(idb) await tx("readwrite",s=>s.delete(id)); S.items=S.items.filter(i=>i.id!==id); render(); }
+async function boot(){
+  render();
+  try{ idb=await openDB(); S.items=(await tx("readonly",s=>s.getAll()))||[]; S.mode="local"; }catch(e){ idb=null; S.mode="memory"; }
+  S.loaded=true; saveState(); render();
+}
+
+/* ---- events ---- */
+$("add-btn").onclick=()=>openItem(null);
+$("close-btn").onclick=()=>$("dlg").close();
+$("dlg").addEventListener("close",stopScan);
+$("scan-btn").onclick=()=>{ if(stream) stopScan(); else startScan(); };
+$("scan-stop").onclick=()=>{ stopScan(); hint(HINT); };
+$("lookup-btn").onclick=()=>lookup($("f-barcode").value);
+$("f-cat").onchange=e=>setCat(e.target.value);
+$("f-photo").onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(f) loadPhoto(f); };
+let mt=0; ["f-name","f-barcode"].forEach(id=>$(id).addEventListener("input",()=>{ clearTimeout(mt); mt=setTimeout(checkMatch,250); }));
+$("listing-btn").onclick=()=>{ const f=formItem(); if(!f.name){ toast("Add a name first."); return; } $("f-listing").value=listingText(f); $("listing").hidden=false; $("copy-btn").hidden=false; };
+$("copy-btn").onclick=()=>copy($("f-listing").value,$("f-listing"));
+function copy(text,el){ (navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(()=>toast("Copied.")).catch(()=>{ if(el){ el.focus(); el.select(); toast("Select and copy the text."); } else toast("Copying isn't allowed here."); }); }
+$("delete-btn").onclick=async()=>{
+  if(!editing) return; if(!delArmed){ delArmed=true; $("delete-btn").textContent="Press again to delete"; return; }
+  try{ await removeItem(editing.id); $("dlg").close(); toast("Deleted."); }catch(e){ toast("Couldn't delete. Try again."); }
+};
+$("item-form").addEventListener("submit",async e=>{
+  e.preventDefault(); const f=formItem(); if(!f.name){ toast("Give the item a name."); $("f-name").focus(); return; }
+  const b=$("save-btn"); b.disabled=true;
+  try{ await saveItem(f,editing?editing.id:null); $("dlg").close(); toast(editing?"Saved.":"Added to your collection."); }
+  catch(err){ toast("Couldn't save. This device may be out of storage space."); }
+  finally{ b.disabled=false; }
+});
+$("export-btn").onclick=()=>{
+  if(!S.items.length){ toast("Nothing to export yet."); return; }
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([JSON.stringify({app:"cubby",version:1,items:S.items})],{type:"application/json"}));
+  a.download="cubby-backup-"+new Date().toISOString().slice(0,10)+".json"; document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+};
+$("import-file").onchange=async e=>{
+  const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f) return;
+  try{
+    const j=JSON.parse(await f.text()); const list=(Array.isArray(j)?j:j.items||[]).filter(i=>i&&typeof i.name==="string"&&i.name&&CATS[i.cat]);
+    if(!list.length){ toast("That file has no Cubby items in it."); return; }
+    let n=0; for(const raw of list){ const {id,example,...d}=raw; const known=S.items.some(i=>i.id===id); await saveItem({...d,photo:typeof d.photo==="string"&&d.photo.startsWith("data:image/")?d.photo:""},known?id:null); n++; }
+    toast("Imported "+n+" item"+(n===1?"":"s")+".");
+  }catch(err){ toast("That file couldn't be read. Choose a Cubby backup file."); }
+};
+$("main").addEventListener("click",e=>{
+  const card=e.target.closest(".card"); if(card){ const it=shown().find(i=>i.id===card.dataset.id); if(it) openItem(it); return; }
+  const tab=e.target.closest(".tab"); if(tab){ S.cat=tab.dataset.cat; render(); return; }
+  if(e.target.id==="copy-list"){ const mine=shown().filter(i=>i.status==="owned"||i.status==="forsale"); copy(mine.map(i=>"• "+[i.maker,i.name,i.detail].filter(Boolean).join(", ")).join("\n")); }
+});
+$("main").addEventListener("input",e=>{ if(e.target.id==="search"){ S.q=e.target.value; const g=$("grid"); if(g) g.innerHTML=gridHTML(filtered(shown())); } });
+$("main").addEventListener("change",e=>{ if(e.target.id==="status-sel"){ S.status=e.target.value; render(); } if(e.target.id==="sort-sel"){ S.sort=e.target.value; render(); } });
+window.addEventListener("hashchange",render);
+boot();
+</script>
+</body>
+</html>
